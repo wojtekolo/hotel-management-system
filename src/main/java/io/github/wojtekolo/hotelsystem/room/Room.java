@@ -23,9 +23,9 @@ public class Room {
 
     @ManyToOne
     @JoinColumn(name = "room_type_id", nullable = false)
-    private RoomType roomType;
+    private RoomType type;
 
     @ManyToOne
     @JoinColumn(name = "room_status_id", nullable = false)
-    private RoomStatus roomStatus;
+    private RoomStatus status;
 }

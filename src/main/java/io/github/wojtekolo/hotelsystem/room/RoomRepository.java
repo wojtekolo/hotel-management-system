@@ -21,8 +21,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         rt.capacity
         )
         FROM Room r
-        JOIN r.roomType rt
-        JOIN r.roomStatus rs
+        JOIN r.type rt
+        JOIN r.status rs
     """
     )
     Slice<RoomListItem> findAllRooms(Pageable pageable);
