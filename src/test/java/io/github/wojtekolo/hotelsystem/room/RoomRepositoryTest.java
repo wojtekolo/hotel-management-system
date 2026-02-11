@@ -26,9 +26,12 @@ class RoomRepositoryTest {
     @Test
     void should_return_room_list_item_when_room_exists(){
 //        given
-        RoomType deluxeType = persistType("Double Deluxe", BigDecimal.valueOf(500), 2);
-        RoomStatus availableStatus = persistStatus("Available");
-        persistRoom("101",2, availableStatus, deluxeType);
+        RoomType deluxeType = RoomTestUtils.aValidType().name("Test type").pricePerNight(BigDecimal.valueOf(500)).capacity(5).build();
+        entityManager.persist(deluxeType);
+        RoomStatus availableStatus = RoomStatus.builder().name("Available").build();
+        entityManager.persist(availableStatus);
+        Room room = RoomTestUtils.aValidRoom(deluxeType, availableStatus).name("101").floor(5).build();
+        entityManager.persist(room);
 
 //        when
         Slice<RoomListItem> result = roomRepository.findAllRooms(PageRequest.of(0, 10));
@@ -39,10 +42,10 @@ class RoomRepositoryTest {
         RoomListItem dto = result.getContent().getFirst();
         assertThat(dto.name()).isEqualTo("101");
         assertThat(dto.pricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(500));
-        assertThat(dto.floor()).isEqualTo(2);
+        assertThat(dto.floor()).isEqualTo(5);
         assertThat(dto.status()).isEqualTo("Available");
-        assertThat(dto.type()).isEqualTo("Double Deluxe");
-        assertThat(dto.capacity()).isEqualTo(2);
+        assertThat(dto.type()).isEqualTo("Test type");
+        assertThat(dto.capacity()).isEqualTo(5);
     }
 
     @Test
@@ -53,41 +56,5 @@ class RoomRepositoryTest {
 
 //        then
         assertThat(result.getContent()).isEmpty();
-    }
-
-    private void persistRoom(
-            String name,
-            Integer floor,
-            RoomStatus status,
-            RoomType type
-    ){
-        Room room = new Room(
-                null,
-                name,
-                floor,
-                "Description",
-                type,
-                status
-        );
-        entityManager.persist(room);
-    }
-
-    private RoomStatus persistStatus(String statusName){
-        RoomStatus status = new RoomStatus(
-                null,
-                statusName
-        );
-        return entityManager.persist(status);
-    }
-
-    private RoomType persistType(String typeName, BigDecimal pricePerNight, Integer capacity){
-        RoomType type = new RoomType(
-                null,
-                typeName,
-                pricePerNight,
-                "Description",
-                capacity
-        );
-        return entityManager.persist(type);
     }
 }
