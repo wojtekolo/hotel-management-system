@@ -8,6 +8,7 @@ public record RoomListItem(
         BigDecimal pricePerNight,
         Integer floor,
         String type,
-        String status
+        String status,
+        Integer capacity
 ) {
 }

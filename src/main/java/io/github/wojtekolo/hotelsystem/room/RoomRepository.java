@@ -17,12 +17,13 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
         rt.pricePerNight,
         r.floor,
         rt.name,
-        rs.name
+        rs.name,
+        rt.capacity
         )
         FROM Room r
         JOIN r.roomType rt
         JOIN r.roomStatus rs
     """
     )
-    public Slice<RoomListItem> findAllRooms(Pageable pageable);
+    Slice<RoomListItem> findAllRooms(Pageable pageable);
 }
