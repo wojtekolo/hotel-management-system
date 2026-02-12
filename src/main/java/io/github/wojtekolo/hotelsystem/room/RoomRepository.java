@@ -26,4 +26,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     """
     )
     Slice<RoomListItem> findAllRooms(Pageable pageable);
+
+    boolean existsByName(String name);
 }
