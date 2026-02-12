@@ -39,7 +39,7 @@ class RoomControllerTest {
         );
         given(roomService.getRooms(any())).willReturn(new SliceImpl<>(List.of(item)));
 
-        mockMvc.perform(get("/rooms/roomlist")
+        mockMvc.perform(get("/rooms/list")
                 .param("page", "0")
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -53,7 +53,7 @@ class RoomControllerTest {
     void should_return_empty_slice_when_no_rooms() throws Exception {
         given(roomService.getRooms(any())).willReturn(new SliceImpl<>(List.of()));
 
-        mockMvc.perform(get("/rooms/roomlist")
+        mockMvc.perform(get("/rooms/list")
                 .param("page", "0")
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
