@@ -43,8 +43,7 @@ public class GlobalExceptionHandler {
 
         Throwable cause = ex.getCause();
 
-        if(cause instanceof InvalidFormatException){
-            InvalidFormatException ifex = (InvalidFormatException) cause;
+        if(cause instanceof InvalidFormatException ifex){
             result.put(ifex.getPath().get(0).getPropertyName(),"Invalid input: "+ifex.getValue()+", expected type: "+ifex.getTargetType().getSimpleName());
         } else {
             result.put("error", "json error");
