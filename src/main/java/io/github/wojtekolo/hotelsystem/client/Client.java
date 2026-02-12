@@ -20,4 +20,8 @@ public class Client {
     Person person;
 
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "loyalty_status_id")
+    private LoyaltyStatus loyaltyStatus;
 }
