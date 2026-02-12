@@ -1,0 +1,23 @@
+package io.github.wojtekolo.hotelsystem.client;
+
+import io.github.wojtekolo.hotelsystem.common.person.Person;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Setter
+@Getter
+public class Client {
+    @Id
+    private Long id;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
+    Person person;
+
+    private String description;
+}
