@@ -2,8 +2,7 @@ package io.github.wojtekolo.hotelsystem.room;
 
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomCreateRequest;
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
+import io.github.wojtekolo.hotelsystem.room.dtos.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -16,12 +15,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RoomController.class)
 class RoomControllerTest {
@@ -144,5 +143,33 @@ class RoomControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void should_return_details_and_location_when_room_added() throws Exception {
+//        given
+        RoomDetails roomDetails = RoomTestUtils.aValidRoomDetails();
+        roomDetails.type().id();
+
+        RoomCreateRequest createRequest = new RoomCreateRequest(
+                "name",
+                1,
+                "description",
+                1L
+        );
+
+        given(roomService.addRoom(createRequest)).willReturn(roomDetails);
+
+//        when and then
+        mockMvc.perform(post("/rooms/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", containsString("/rooms/add/" + roomDetails.id())))
+                .andExpect(jsonPath("$.id").value(roomDetails.id()))
+                .andExpect(jsonPath("$.name").value(roomDetails.name()))
+                .andExpect(jsonPath("$.type.name").value(roomDetails.type().name()))
+                .andExpect(jsonPath("$.type.pricePerNight").value(roomDetails.type().pricePerNight()))
+                .andExpect(jsonPath("$.status.name").value(roomDetails.status().name()));
     }
 }
