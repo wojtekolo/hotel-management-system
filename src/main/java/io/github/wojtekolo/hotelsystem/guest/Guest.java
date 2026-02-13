@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.client;
+package io.github.wojtekolo.hotelsystem.guest;
 
 import io.github.wojtekolo.hotelsystem.common.person.Person;
 import jakarta.persistence.*;
@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @Setter
 @Getter
-public class Client {
+public class Guest {
     @Id
     private Long id;
 
