@@ -10,6 +10,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/rooms")
@@ -30,6 +33,12 @@ public class RoomController {
     @PostMapping("/add")
     public ResponseEntity<RoomDetails> addRoom(@Valid @RequestBody RoomCreateRequest createRequest) {
         RoomDetails createdRoom = roomService.addRoom(createRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdRoom.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(createdRoom);
     }
 }
