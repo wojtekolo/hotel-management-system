@@ -21,7 +21,6 @@ public class PhoneNumber {
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
-    @ManyToOne
-    @JoinColumn(name = "phone_type_id", nullable = false)
+    @Enumerated(EnumType.STRING)
     private PhoneType type;
 }
