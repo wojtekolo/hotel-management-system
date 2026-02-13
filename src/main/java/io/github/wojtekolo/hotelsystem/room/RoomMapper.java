@@ -1,7 +1,6 @@
 package io.github.wojtekolo.hotelsystem.room;
 
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomCreateRequest;
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
+import io.github.wojtekolo.hotelsystem.room.dtos.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -18,4 +17,10 @@ public interface RoomMapper {
     @Mapping(source = "type.pricePerNight", target = "pricePerNight")
     @Mapping(source = "type.capacity", target = "capacity")
     RoomListItem toDto(Room room);
+
+    RoomDetails toDetailsDto(Room room);
+
+    RoomTypeDto toRoomTypeDto(RoomType roomType);
+
+    RoomStatusDto toRoomStatusDto(RoomStatus roomStatus);
 }

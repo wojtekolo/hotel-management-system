@@ -1,6 +1,7 @@
 package io.github.wojtekolo.hotelsystem.room;
 
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomCreateRequest;
+import io.github.wojtekolo.hotelsystem.room.dtos.RoomDetails;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -27,8 +28,8 @@ public class RoomController {
         return ResponseEntity.ok(roomListItems);
     }
     @PostMapping("/add")
-    public ResponseEntity<RoomListItem> addRoom(@Valid @RequestBody RoomCreateRequest createRequest) {
-        RoomListItem createdRoom = roomService.addRoom(createRequest);
+    public ResponseEntity<RoomDetails> addRoom(@Valid @RequestBody RoomCreateRequest createRequest) {
+        RoomDetails createdRoom = roomService.addRoom(createRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
     }
 }

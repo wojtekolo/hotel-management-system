@@ -3,6 +3,7 @@ package io.github.wojtekolo.hotelsystem.room;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomCreateRequest;
+import io.github.wojtekolo.hotelsystem.room.dtos.RoomDetails;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,7 +32,7 @@ public class RoomService {
         return roomRepository.findAllRooms(pageable);
     }
 
-    public RoomListItem addRoom(RoomCreateRequest createRequest) {
+    public RoomDetails addRoom(RoomCreateRequest createRequest) {
         Room room = roomMapper.toEntity(createRequest);
 
         if (roomRepository.existsByName(room.getName()))
@@ -47,6 +48,6 @@ public class RoomService {
         room.setStatus(defaultStatus);
 
         Room savedRoom = roomRepository.save(room);
-        return roomMapper.toDto(savedRoom);
+        return roomMapper.toDetailsDto(savedRoom);
     }
 }
