@@ -18,7 +18,7 @@ public class PhoneNumber {
     private String number;
 
     @ManyToOne
-    @JoinColumn(name = "person_id", nullable = false)
+    @JoinColumn(name = "person_id")
     private Person person;
 
     @Enumerated(EnumType.STRING)
