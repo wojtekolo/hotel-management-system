@@ -1,6 +1,5 @@
 package io.github.wojtekolo.hotelsystem.room.dtos;
 
-import io.github.wojtekolo.hotelsystem.room.RoomStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
