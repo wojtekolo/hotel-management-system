@@ -1,19 +1,19 @@
 package io.github.wojtekolo.hotelsystem.room;
 
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomDetails;
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomStatusDto;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomTypeDto;
 
 import java.math.BigDecimal;
 
 public class RoomTestUtils {
-    public static Room.RoomBuilder aValidRoom(RoomType type, RoomStatus status) {
+    public static Room.RoomBuilder aValidRoom(RoomType type, OperationalStatus operationalStatus, LifecycleStatus lifecycleStatus) {
         return Room.builder()
                 .name("0")
                 .floor(0)
                 .description("Room description")
                 .type(type)
-                .status(status);
+                .lifecycleStatus(lifecycleStatus)
+                .operationalStatus(operationalStatus);
     }
     public static RoomType.RoomTypeBuilder aValidType(){
         return RoomType.builder()
@@ -31,18 +31,14 @@ public class RoomTestUtils {
                 2
         );
 
-        RoomStatusDto roomStatusDto = new RoomStatusDto(
-                1L,
-                "status name"
-        );
-
         return new RoomDetails(
                 10L,
                 "room name",
                 2,
                 "description",
                 roomTypeDto,
-                roomStatusDto
+                LifecycleStatus.ACTIVE,
+                OperationalStatus.CLEAN
         );
     }
 }

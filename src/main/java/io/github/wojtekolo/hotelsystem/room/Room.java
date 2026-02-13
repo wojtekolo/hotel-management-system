@@ -25,7 +25,11 @@ public class Room {
     @JoinColumn(name = "room_type_id", nullable = false)
     private RoomType type;
 
-    @ManyToOne
-    @JoinColumn(name = "room_status_id", nullable = false)
-    private RoomStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lifecycle_status")
+    private LifecycleStatus lifecycleStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operational_status")
+    private OperationalStatus operationalStatus;
 }

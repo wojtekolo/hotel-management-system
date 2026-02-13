@@ -28,9 +28,8 @@ class RoomRepositoryTest {
 //        given
         RoomType deluxeType = RoomTestUtils.aValidType().name("Test type").pricePerNight(BigDecimal.valueOf(500)).capacity(5).build();
         entityManager.persist(deluxeType);
-        RoomStatus availableStatus = RoomStatus.builder().name("Available").build();
-        entityManager.persist(availableStatus);
-        Room room = RoomTestUtils.aValidRoom(deluxeType, availableStatus).name("101").floor(5).build();
+
+        Room room = RoomTestUtils.aValidRoom(deluxeType, OperationalStatus.CLEAN, LifecycleStatus.ACTIVE).name("101").floor(5).build();
         entityManager.persist(room);
 
 //        when
@@ -43,7 +42,8 @@ class RoomRepositoryTest {
         assertThat(dto.name()).isEqualTo("101");
         assertThat(dto.pricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(500));
         assertThat(dto.floor()).isEqualTo(5);
-        assertThat(dto.status()).isEqualTo("Available");
+        assertThat(dto.operationalStatus()).isEqualTo(OperationalStatus.CLEAN);
+        assertThat(dto.lifecycleStatus()).isEqualTo(LifecycleStatus.ACTIVE);
         assertThat(dto.type()).isEqualTo("Test type");
         assertThat(dto.capacity()).isEqualTo(5);
     }

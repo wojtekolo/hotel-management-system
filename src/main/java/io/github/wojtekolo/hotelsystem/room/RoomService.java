@@ -12,18 +12,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoomService {
     private final RoomRepository roomRepository;
-    private final RoomStatusRepository roomStatusRepository;
     private final RoomTypeRepository roomTypeRepository;
     private final RoomMapper roomMapper;
 
     public RoomService(
             RoomRepository roomRepository,
-            RoomStatusRepository roomStatusRepository,
             RoomTypeRepository roomTypeRepository,
             RoomMapper roomMapper
     ) {
         this.roomRepository = roomRepository;
-        this.roomStatusRepository = roomStatusRepository;
         this.roomTypeRepository = roomTypeRepository;
         this.roomMapper = roomMapper;
     }
@@ -41,11 +38,9 @@ public class RoomService {
         RoomType type = roomTypeRepository.findById(createRequest.typeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Invalid room type ID"));
 
-        RoomStatus defaultStatus = roomStatusRepository.findByName("AVAILABLE")
-                .orElseThrow(() -> new IllegalStateException("Default status not found"));
-
         room.setType(type);
-        room.setStatus(defaultStatus);
+        room.setLifecycleStatus(LifecycleStatus.ACTIVE);
+        room.setOperationalStatus(OperationalStatus.CLEAN);
 
         Room savedRoom = roomRepository.save(room);
         return roomMapper.toDetailsDto(savedRoom);

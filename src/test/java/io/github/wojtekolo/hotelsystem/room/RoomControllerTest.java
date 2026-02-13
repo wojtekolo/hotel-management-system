@@ -42,7 +42,8 @@ class RoomControllerTest {
                 BigDecimal.valueOf(500),
                 3,
                 "type",
-                "status",
+                OperationalStatus.CLEAN,
+                LifecycleStatus.ACTIVE,
                 1
         );
         given(roomService.getRooms(any())).willReturn(new SliceImpl<>(List.of(item)));
@@ -149,7 +150,6 @@ class RoomControllerTest {
     void should_return_details_and_location_when_room_added() throws Exception {
 //        given
         RoomDetails roomDetails = RoomTestUtils.aValidRoomDetails();
-        roomDetails.type().id();
 
         RoomCreateRequest createRequest = new RoomCreateRequest(
                 "name",
@@ -170,6 +170,7 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.name").value(roomDetails.name()))
                 .andExpect(jsonPath("$.type.name").value(roomDetails.type().name()))
                 .andExpect(jsonPath("$.type.pricePerNight").value(roomDetails.type().pricePerNight()))
-                .andExpect(jsonPath("$.status.name").value(roomDetails.status().name()));
+                .andExpect(jsonPath("$.operationalStatus").value(roomDetails.operationalStatus().name()))
+                .andExpect(jsonPath("$.lifecycleStatus").value(roomDetails.lifecycleStatus().name()));
     }
 }
