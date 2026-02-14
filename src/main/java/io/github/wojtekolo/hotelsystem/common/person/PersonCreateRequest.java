@@ -1,30 +1,21 @@
 package io.github.wojtekolo.hotelsystem.common.person;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 
-import java.util.List;
+import java.time.LocalDate;
 
 public record PersonCreateRequest (
 
-        @NotBlank
+        @NotBlank(message = "Person name is required")
         String name,
 
-        @NotBlank
+        @NotBlank(message = "Person surname is required")
         String surname,
 
-        @NotBlank
-        @Email
-        String email,
-
-        @NotEmpty
-        @Valid
-        List<PhoneRequest> phoneNumbers,
-
-        @NotEmpty
-        @Valid
-        List<DocumentRequest> personalDocuments
+        @NotNull(message = "Person birth date is required")
+        @Past(message = "Birth date must be in the past")
+        LocalDate birthDate
 ) {
 }

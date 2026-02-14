@@ -2,6 +2,7 @@ package io.github.wojtekolo.hotelsystem.customer;
 
 import io.github.wojtekolo.hotelsystem.common.person.Person;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 
 @Entity
@@ -24,4 +25,11 @@ public class Customer {
     @ManyToOne
     @JoinColumn(name = "loyalty_status_id")
     private LoyaltyStatus loyaltyStatus;
+
+    @Email
+    @Column(nullable = false)
+    private String privateEmail;
+
+    @Column(nullable = false)
+    private String privatePhone;
 }

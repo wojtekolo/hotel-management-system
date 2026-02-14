@@ -4,8 +4,10 @@ import io.github.wojtekolo.hotelsystem.common.person.PersonDetails;
 
 public record CustomerDetails(
         Long id,
+        PersonDetails person,
         String description,
         LoyaltyStatus loyaltyStatus,
-        PersonDetails person
+        String privateEmail,
+        String privatePhone
         ) {
 }

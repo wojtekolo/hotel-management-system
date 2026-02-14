@@ -8,7 +8,6 @@ import org.mapstruct.Mapping;
 public interface CustomerMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "loyaltyStatus", ignore = true)
     Customer toEntity(CustomerCreateRequest createRequest);
 
     CustomerDetails toDetails(Customer customer);

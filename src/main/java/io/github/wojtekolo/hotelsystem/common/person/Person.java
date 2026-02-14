@@ -2,8 +2,10 @@ package io.github.wojtekolo.hotelsystem.common.person;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Past;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -23,14 +25,6 @@ public class Person {
     @Column(nullable = false)
     private String surname;
 
-    @Email
-    @Column(unique = true)
-    private String email;
-
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PhoneNumber> phoneNumbers;
-
-    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PersonalDocument> personalDocuments;
-
+    @Past
+    private LocalDate birthDate;
 }
