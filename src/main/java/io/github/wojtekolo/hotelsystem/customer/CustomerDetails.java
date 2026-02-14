@@ -1,8 +1,8 @@
-package io.github.wojtekolo.hotelsystem.guest;
+package io.github.wojtekolo.hotelsystem.customer;
 
 import io.github.wojtekolo.hotelsystem.common.person.PersonDetails;
 
-public record GuestDetails(
+public record CustomerDetails(
         Long id,
         String description,
         LoyaltyStatus loyaltyStatus,

@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.guest;
+package io.github.wojtekolo.hotelsystem.customer;
 
 import jakarta.persistence.*;
 
