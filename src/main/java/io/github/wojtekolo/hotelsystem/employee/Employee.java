@@ -34,6 +34,9 @@ public class Employee {
 
     @Column(nullable = false, unique = true)
     private String idCardNumber;
+
+    private BigDecimal salary;
+
     @Email
     @Column(nullable = false, unique = true)
     private String workEmail;
@@ -43,4 +46,10 @@ public class Employee {
 
     @Column(unique = true)
     private String emergencyPhone;
+
+    @Column(nullable = false)
+    private LocalDate hireDate;
+
+    @Column(nullable = false)
+    private LocalDate dismissalDate;
 }
