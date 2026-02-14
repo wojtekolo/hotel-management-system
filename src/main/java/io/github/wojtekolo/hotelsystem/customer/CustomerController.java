@@ -18,8 +18,6 @@ public class CustomerController {
 
     @PostMapping("/add")
     public ResponseEntity<CustomerDetails> addCustomer(@RequestBody @Valid CustomerCreateRequest createRequest){
-        System.out.println(createRequest.person());
-        System.out.println(createRequest.description());
         return ResponseEntity.ok(customerService.addCustomer(createRequest));
     }
 }
