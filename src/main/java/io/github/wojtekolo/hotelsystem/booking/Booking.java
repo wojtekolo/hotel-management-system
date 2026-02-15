@@ -2,12 +2,11 @@ package io.github.wojtekolo.hotelsystem.booking;
 
 import io.github.wojtekolo.hotelsystem.customer.Customer;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
-import io.github.wojtekolo.hotelsystem.room.Room;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -24,38 +23,23 @@ public class Booking {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @FutureOrPresent
-    @Column(nullable = false)
-    private LocalDate plannedArrival;
-
-    @FutureOrPresent
-    @Column(nullable = false)
-    private LocalDate plannedDeparture;
-
-    private LocalDateTime actualArrival;
-    private LocalDateTime actualDeparture;
-
     @Column(nullable = false)
     private LocalDateTime createTime;
-
-    @Column(nullable = false)
-    private LocalDateTime lastUpdateTime;
 
     @ManyToOne
     @JoinColumn(name = "create_employee_id", nullable = false)
     private Employee createdBy;
 
-    @ManyToOne
-    @JoinColumn(name = "check_in_employee_id")
-    private Employee checkedInBy;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
 
-    @ManyToOne
-    @JoinColumn(name = "check_out_employee_id")
-    private Employee checkedOutBy;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BookingStatus status;
 
     @PrePersist
     private void setCreateTime(){
         createTime = LocalDateTime.now();
-        lastUpdateTime = LocalDateTime.now();
     }
 }
