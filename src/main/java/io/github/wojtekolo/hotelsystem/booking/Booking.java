@@ -4,12 +4,17 @@ import io.github.wojtekolo.hotelsystem.customer.Customer;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
 import io.github.wojtekolo.hotelsystem.room.Room;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.FutureOrPresent;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Setter
+@Getter
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

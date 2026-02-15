@@ -4,6 +4,7 @@ import io.github.wojtekolo.hotelsystem.employee.Employee;
 import io.github.wojtekolo.hotelsystem.guest.Guest;
 import io.github.wojtekolo.hotelsystem.room.Room;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,6 +12,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Setter
+@Getter
 public class RoomStay {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
