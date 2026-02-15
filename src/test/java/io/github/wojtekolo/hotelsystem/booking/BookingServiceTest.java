@@ -70,13 +70,21 @@ class BookingServiceTest {
                 context.employee().getId(),
                 List.of(singleStayRequest)
         );
-        BigDecimal cost = context.room().getType().getPricePerNight().multiply(BigDecimal.valueOf(days));
 
 //        when
         BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
 //        then
         Booking savedBooking = bookingRepository.findById(result.id())
                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+        assertThat(savedBooking.getId()).isNotNull();
+        assertThat(savedBooking.getCustomer().getId()).isEqualTo(context.customer().getId());
+        assertThat(savedBooking.getStays().getFirst().getRoom().getId()).isEqualTo(context.room().getId());
+        assertThat(savedBooking.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
+        assertThat(savedBooking.getStatus()).isEqualTo(BookingStatus.PLANNED);
+        assertThat(savedBooking.getCreatedBy().getId()).isEqualTo(context.employee().getId());
+
 
         assertThat(result.customerName()).isEqualTo(context.customer().getPerson().getName());
         assertThat(result.stays()).hasSize(1);
@@ -84,6 +92,7 @@ class BookingServiceTest {
 
         assertThat(result.totalCost()).isEqualByComparingTo(cost);
         assertThat(result.status()).isEqualTo(BookingStatus.PLANNED);
+        assertThat(result.paymentStatus()).isEqualTo(PaymentStatus.UNPAID);
     }
 
     private BookingTestContext prepareContext() {
