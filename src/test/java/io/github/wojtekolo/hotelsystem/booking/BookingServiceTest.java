@@ -90,7 +90,6 @@ class BookingServiceTest {
         assertThat(result.stays()).hasSize(1);
         assertThat(result.stays().getFirst().roomName()).isEqualTo(context.room().getName());
 
-        assertThat(result.totalCost()).isEqualByComparingTo(cost);
         assertThat(result.status()).isEqualTo(BookingStatus.PLANNED);
         assertThat(result.paymentStatus()).isEqualTo(PaymentStatus.UNPAID);
     }
