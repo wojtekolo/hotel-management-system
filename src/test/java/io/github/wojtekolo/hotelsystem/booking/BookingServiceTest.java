@@ -1,0 +1,100 @@
+package io.github.wojtekolo.hotelsystem.booking;
+
+import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.common.person.PersonRepository;
+import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
+import io.github.wojtekolo.hotelsystem.customer.*;
+import io.github.wojtekolo.hotelsystem.employee.Employee;
+import io.github.wojtekolo.hotelsystem.employee.EmployeeRepository;
+import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
+import io.github.wojtekolo.hotelsystem.room.*;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+
+@SpringBootTest
+@Transactional
+@TestPropertySource(properties = {
+        "spring.sql.init.mode=never",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+class BookingServiceTest {
+    @Autowired
+    BookingService bookingService;
+
+    @Autowired
+    BookingRepository bookingRepository;
+
+    @Autowired
+    RoomRepository roomRepository;
+
+    @Autowired
+    RoomTypeRepository roomTypeRepository;
+
+    @Autowired
+    PersonRepository personRepository;
+
+    @Autowired
+    CustomerRepository customerRepository;
+
+    @Autowired
+    LoyaltyStatusRepository loyaltyStatusRepository;
+
+    @Autowired
+    EmployeeRepository employeeRepository;
+
+    @Test
+    public void should_persist_single_stay(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+        var singleStayRequest = new SingleRoomStayRequest(
+                context.room().getId(),
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(5+days)
+        );
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                context.customer().getId(),
+                List.of(singleStayRequest)
+        );
+        BigDecimal cost = context.room().getType().getPricePerNight().multiply(BigDecimal.valueOf(days));
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+//        then
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+        assertThat(result.customerName()).isEqualTo(context.customer().getPerson().getName());
+        assertThat(result.stays()).hasSize(1);
+        assertThat(result.stays().getFirst().roomName()).isEqualTo(context.room().getName());
+
+        assertThat(result.totalCost()).isEqualByComparingTo(cost);
+        assertThat(result.status()).isEqualTo(BookingStatus.PLANNED);
+    }
+
+    private BookingTestContext prepareContext() {
+        RoomType type = roomTypeRepository.save(RoomTestUtils.aValidType().build());
+        Room room = roomRepository.save(RoomTestUtils.aValidRoom(type).build());
+
+        Person personCustomer = personRepository.save(PersonTestUtils.aValidPerson().build());
+        LoyaltyStatus loyaltyStatus = loyaltyStatusRepository.save(CustomerTestUtils.aValidLoyaltyStatus().build());
+        Customer customer = customerRepository.save(CustomerTestUtils.aValidCustomer(personCustomer, loyaltyStatus).build());
+
+        Person personEmp = personRepository.save(PersonTestUtils.aValidPerson().build());
+        Employee employee = employeeRepository.save(EmployeeTestUtils.aValidEmployee(personEmp).build());
+
+        return new BookingTestContext(customer, employee, room);
+    }
+}
