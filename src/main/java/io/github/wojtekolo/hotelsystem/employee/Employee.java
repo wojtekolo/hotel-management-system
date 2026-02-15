@@ -25,8 +25,8 @@ public class Employee {
 
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private EmployeeRole employeeRole;
 
     @Column(nullable = false, unique = true, length = 11)
