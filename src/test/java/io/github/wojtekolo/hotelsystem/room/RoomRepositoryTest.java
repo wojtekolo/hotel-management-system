@@ -29,7 +29,7 @@ class RoomRepositoryTest {
         RoomType deluxeType = RoomTestUtils.aValidType().name("Test type").pricePerNight(BigDecimal.valueOf(500)).capacity(5).build();
         entityManager.persist(deluxeType);
 
-        Room room = RoomTestUtils.aValidRoom(deluxeType, OperationalStatus.CLEAN, LifecycleStatus.ACTIVE).name("101").floor(5).build();
+        Room room = RoomTestUtils.aValidRoom().type(deluxeType).operationalStatus(OperationalStatus.CLEAN).lifecycleStatus(LifecycleStatus.ACTIVE).name("101").floor(5).build();
         entityManager.persist(room);
 
 //        when

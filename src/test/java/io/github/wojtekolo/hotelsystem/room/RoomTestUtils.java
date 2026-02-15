@@ -6,14 +6,14 @@ import io.github.wojtekolo.hotelsystem.room.dtos.RoomTypeDto;
 import java.math.BigDecimal;
 
 public class RoomTestUtils {
-    public static Room.RoomBuilder aValidRoom(RoomType type, OperationalStatus operationalStatus, LifecycleStatus lifecycleStatus) {
+    public static Room.RoomBuilder aValidRoom() {
         return Room.builder()
                 .name("0")
                 .floor(0)
                 .description("Room description")
-                .type(type)
-                .lifecycleStatus(lifecycleStatus)
-                .operationalStatus(operationalStatus);
+                .type(aValidType().build())
+                .lifecycleStatus(LifecycleStatus.ACTIVE)
+                .operationalStatus(OperationalStatus.CLEAN);
     }
     public static RoomType.RoomTypeBuilder aValidType(){
         return RoomType.builder()
