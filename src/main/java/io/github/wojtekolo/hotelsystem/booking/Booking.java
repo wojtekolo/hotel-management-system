@@ -42,4 +42,7 @@ public class Booking {
     private void setCreateTime(){
         createTime = LocalDateTime.now();
     }
+
+    @OneToMany(mappedBy = "booking")
+    private List<RoomStay> stays;
 }
