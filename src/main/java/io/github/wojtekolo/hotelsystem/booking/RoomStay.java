@@ -77,4 +77,9 @@ public class RoomStay {
         createTime = LocalDateTime.now();
         lastUpdateTime = LocalDateTime.now();
     }
+
+    @PreUpdate
+    private void setUpdateTime(){
+        this.lastUpdateTime = LocalDateTime.now();
+    }
 }
