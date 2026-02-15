@@ -61,7 +61,8 @@ class BookingServiceTest {
         var singleStayRequest = new SingleRoomStayRequest(
                 context.room().getId(),
                 LocalDate.now().plusDays(5),
-                LocalDate.now().plusDays(5+days)
+                LocalDate.now().plusDays(5+days),
+                null
         );
 
         var bookingCreateRequest = new BookingCreateRequest(
