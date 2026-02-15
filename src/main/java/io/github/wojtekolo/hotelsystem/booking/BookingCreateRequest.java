@@ -4,6 +4,7 @@ import java.util.List;
 
 public record BookingCreateRequest(
         Long customerId,
+        Long employeeId,
         List<SingleRoomStayRequest> stays
 ) {
 }

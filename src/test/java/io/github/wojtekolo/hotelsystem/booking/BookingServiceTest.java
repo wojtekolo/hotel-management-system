@@ -67,6 +67,7 @@ class BookingServiceTest {
 
         var bookingCreateRequest = new BookingCreateRequest(
                 context.customer().getId(),
+                context.employee().getId(),
                 List.of(singleStayRequest)
         );
         BigDecimal cost = context.room().getType().getPricePerNight().multiply(BigDecimal.valueOf(days));
