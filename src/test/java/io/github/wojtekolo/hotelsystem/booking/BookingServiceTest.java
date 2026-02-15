@@ -95,6 +95,123 @@ class BookingServiceTest {
         assertThat(result.paymentStatus()).isEqualTo(PaymentStatus.UNPAID);
     }
 
+    @Test
+    public void should_persist_multiple_stays(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+        Room room1 = context.room();
+        Room room2 = roomRepository.save(RoomTestUtils.aValidRoom(room1.getType()).build());
+        Room room3 = roomRepository.save(RoomTestUtils.aValidRoom(room1.getType()).build());
+
+        var singleStayRequest1 = new SingleRoomStayRequest(
+                room1.getId(),
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(5+days),
+                null
+        );
+
+        var singleStayRequest2 = new SingleRoomStayRequest(
+                room2.getId(),
+                LocalDate.now().plusDays(3),
+                LocalDate.now().plusDays(3+days),
+                null
+        );
+
+        var singleStayRequest3 = new SingleRoomStayRequest(
+                room3.getId(),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(1+days),
+                null
+        );
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                context.customer().getId(),
+                context.employee().getId(),
+                List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3)
+        );
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
+//        then
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+        assertThat(savedBooking.getStays()).hasSize(3);
+    }
+
+
+    @Test
+    public void should_calculate_correct_cost_when_custom_price(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+        Customer customer = prepareCustomerWithDiscount(BigDecimal.valueOf(0.1));
+
+        var singleStayRequest = new SingleRoomStayRequest(
+                context.room().getId(),
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(5+days),
+                BigDecimal.valueOf(700)
+        );
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                customer.getId(),
+                context.employee().getId(),
+                List.of(singleStayRequest)
+        );
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+//        Don't take discount from loyalty status into account when price per night is custom
+        assertThat(savedBooking.getStays().getFirst().getPricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(700));
+        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3500));
+
+    }
+
+    @Test
+    public void should_calculate_correct_cost_when_default_price(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+//        Prepare customer
+        Customer customer = prepareCustomerWithDiscount(BigDecimal.valueOf(0.1));
+
+        RoomType roomType = roomTypeRepository.save(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(700)).build());
+        Room room = roomRepository.save(RoomTestUtils.aValidRoom(roomType).build());
+
+
+        var singleStayRequest = new SingleRoomStayRequest(
+                room.getId(),
+                LocalDate.now().plusDays(5),
+                LocalDate.now().plusDays(5+days),
+                null
+        );
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                customer.getId(),
+                context.employee().getId(),
+                List.of(singleStayRequest)
+        );
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+        assertThat(savedBooking.getStays().getFirst().getPricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(630));
+        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3150));
+    }
+
     private BookingTestContext prepareContext() {
         RoomType type = roomTypeRepository.save(RoomTestUtils.aValidType().build());
         Room room = roomRepository.save(RoomTestUtils.aValidRoom(type).build());
@@ -107,5 +224,11 @@ class BookingServiceTest {
         Employee employee = employeeRepository.save(EmployeeTestUtils.aValidEmployee(personEmp).build());
 
         return new BookingTestContext(customer, employee, room);
+    }
+
+    private Customer prepareCustomerWithDiscount(BigDecimal discount){
+        LoyaltyStatus loyaltyStatus = loyaltyStatusRepository.save(CustomerTestUtils.aValidLoyaltyStatus().discount(discount).build());
+        Person person = personRepository.save(PersonTestUtils.aValidPerson().build());
+        return customerRepository.save(CustomerTestUtils.aValidCustomer(person,loyaltyStatus).build());
     }
 }
