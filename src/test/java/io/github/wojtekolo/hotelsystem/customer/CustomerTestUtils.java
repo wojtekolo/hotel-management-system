@@ -6,6 +6,7 @@ import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import java.math.BigDecimal;
 
 public class CustomerTestUtils {
+    static int counter=0;
     public static Customer.CustomerBuilder aValidCustomer(Person person, LoyaltyStatus loyaltyStatus){
         return Customer.builder()
                 .person(person)
@@ -17,7 +18,7 @@ public class CustomerTestUtils {
 
     public static LoyaltyStatus.LoyaltyStatusBuilder aValidLoyaltyStatus(){
         return LoyaltyStatus.builder()
-                .name("testLoyaltyName")
+                .name("testLoyaltyName"+counter++)
                 .discount(BigDecimal.valueOf(0.1));
     }
 

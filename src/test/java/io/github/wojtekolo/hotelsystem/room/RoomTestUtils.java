@@ -18,7 +18,7 @@ public class RoomTestUtils {
     }
     public static RoomType.RoomTypeBuilder aValidType(){
         return RoomType.builder()
-                .name("0")
+                .name(String.valueOf(counter++))
                 .pricePerNight(BigDecimal.valueOf(0))
                 .description("Type description")
                 .capacity(0);

@@ -9,6 +9,7 @@ import java.util.List;
 
 public record RoomStayDetails(
         Long id,
+        Long bookingId,
         Long roomId,
         String roomName,
         String roomType,
@@ -21,6 +22,10 @@ public record RoomStayDetails(
         RoomStayStatus status,
         List<String> guestNames,
         String createEmployeeName,
-        String createEmployeeSurname
+        String createEmployeeSurname,
+        String checkInEmployeeName,
+        String checkInEmployeeSurname,
+        String checkOutEmployeeName,
+        String checkOutEmployeeSurname
 ) {
 }

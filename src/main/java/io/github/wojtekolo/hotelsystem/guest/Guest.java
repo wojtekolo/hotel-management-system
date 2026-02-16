@@ -2,8 +2,10 @@ package io.github.wojtekolo.hotelsystem.guest;
 
 import io.github.wojtekolo.hotelsystem.common.person.Person;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
+@Getter
 public class Guest {
     @Id
     private Long id;
@@ -11,7 +13,7 @@ public class Guest {
     @OneToOne(cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "id")
-    Person person;
+    private Person person;
 
     private String description;
 

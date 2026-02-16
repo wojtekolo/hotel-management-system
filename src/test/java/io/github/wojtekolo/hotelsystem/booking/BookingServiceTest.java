@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.sql.init.mode=never",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-@Disabled
 class BookingServiceTest {
     @Autowired
     BookingService bookingService;
@@ -175,6 +174,8 @@ class BookingServiceTest {
                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
 
 //        Don't take discount from loyalty status into account when price per night is custom
+        assertThat(savedBooking.getStays()).isNotNull();
+        assertThat(savedBooking.getStays()).hasSize(1);
         assertThat(savedBooking.getStays().getFirst().getPricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(700));
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3500));
 
@@ -231,6 +232,8 @@ class BookingServiceTest {
                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
 
 //        Don't take discount from loyalty status into account when price per night is custom
+        assertThat(savedBooking.getStays()).isNotNull();
+        assertThat(savedBooking.getStays()).hasSize(3);
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(11000));
 
     }
@@ -264,6 +267,8 @@ class BookingServiceTest {
         Booking savedBooking = bookingRepository.findById(result.id())
                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
 
+        assertThat(savedBooking.getStays()).isNotNull();
+        assertThat(savedBooking.getStays()).hasSize(1);
         assertThat(savedBooking.getStays().getFirst().getPricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(630));
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3150));
     }

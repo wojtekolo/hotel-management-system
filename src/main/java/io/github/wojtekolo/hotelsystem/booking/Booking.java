@@ -43,6 +43,11 @@ public class Booking {
         createTime = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "booking")
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<RoomStay> stays;
+
+    public void addStay(RoomStay stay) {
+        this.stays.add(stay);
+        stay.setBooking(this);
+    }
 }
