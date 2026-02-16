@@ -6,9 +6,10 @@ import io.github.wojtekolo.hotelsystem.room.dtos.RoomTypeDto;
 import java.math.BigDecimal;
 
 public class RoomTestUtils {
+    private static int counter = 100;
     public static Room.RoomBuilder aValidRoom(RoomType type) {
         return Room.builder()
-                .name("0")
+                .name(String.valueOf(counter++))
                 .floor(0)
                 .description("Room description")
                 .type(type)

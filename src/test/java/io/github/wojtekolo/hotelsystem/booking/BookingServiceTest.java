@@ -54,6 +54,8 @@ class BookingServiceTest {
     @Autowired
     EmployeeRepository employeeRepository;
 
+    private final LocalDate today = LocalDate.now();
+
     @Test
     public void should_persist_single_stay(){
 //        given
@@ -62,8 +64,8 @@ class BookingServiceTest {
 
         var singleStayRequest = new SingleRoomStayRequest(
                 context.room().getId(),
-                LocalDate.now().plusDays(5),
-                LocalDate.now().plusDays(5+days),
+                today.plusDays(5),
+                today.plusDays(5+days),
                 null
         );
 
@@ -108,22 +110,22 @@ class BookingServiceTest {
 
         var singleStayRequest1 = new SingleRoomStayRequest(
                 room1.getId(),
-                LocalDate.now().plusDays(5),
-                LocalDate.now().plusDays(5+days),
+                today.plusDays(5),
+                today.plusDays(5+days),
                 null
         );
 
         var singleStayRequest2 = new SingleRoomStayRequest(
                 room2.getId(),
-                LocalDate.now().plusDays(3),
-                LocalDate.now().plusDays(3+days),
+                today.plusDays(3),
+                today.plusDays(3+days),
                 null
         );
 
         var singleStayRequest3 = new SingleRoomStayRequest(
                 room3.getId(),
-                LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(1+days),
+                today.plusDays(2),
+                today.plusDays(2+days),
                 null
         );
 
@@ -145,17 +147,18 @@ class BookingServiceTest {
 
 
     @Test
-    public void should_calculate_correct_cost_when_custom_price(){
+    public void should_calculate_correct_cost_when_custom_price_and_single_stay(){
 //        given
         int days=5;
         BookingTestContext context = prepareContext();
 
-        Customer customer = prepareCustomerWithDiscount(BigDecimal.valueOf(0.1));
+        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
+        Room room = roomWithPrice(BigDecimal.valueOf(1000));
 
         var singleStayRequest = new SingleRoomStayRequest(
-                context.room().getId(),
-                LocalDate.now().plusDays(5),
-                LocalDate.now().plusDays(5+days),
+                room.getId(),
+                today.plusDays(5),
+                today.plusDays(5+days),
                 BigDecimal.valueOf(700)
         );
 
@@ -177,23 +180,75 @@ class BookingServiceTest {
 
     }
 
+
     @Test
-    public void should_calculate_correct_cost_when_default_price(){
+    public void should_calculate_correct_cost_when_custom_price_and_multiple_stays(){
 //        given
         int days=5;
         BookingTestContext context = prepareContext();
 
-//        Prepare customer
-        Customer customer = prepareCustomerWithDiscount(BigDecimal.valueOf(0.1));
+        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
+        Room room1 = roomWithPrice(BigDecimal.valueOf(100));
+        Room room2 = roomWithPrice(BigDecimal.valueOf(200));
+        Room room3 = roomWithPrice(BigDecimal.valueOf(300));
 
-        RoomType roomType = roomTypeRepository.save(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(700)).build());
-        Room room = roomRepository.save(RoomTestUtils.aValidRoom(roomType).build());
+        var singleStayRequest1 = new SingleRoomStayRequest(
+                room1.getId(),
+                today.plusDays(5),
+                today.plusDays(5+days),
+                BigDecimal.valueOf(500)
+        );
+//        5 * 500 = 2500
+
+        var singleStayRequest2 = new SingleRoomStayRequest(
+                room2.getId(),
+                today.plusDays(5),
+                today.plusDays(6+days),
+                BigDecimal.valueOf(600)
+        );
+//        6 * 600 = 3600
+
+        var singleStayRequest3 = new SingleRoomStayRequest(
+                room3.getId(),
+                today.plusDays(5),
+                today.plusDays(7+days),
+                BigDecimal.valueOf(700)
+        );
+//        7 * 700 = 4900
+
+//        total = 4900 + 3600 + 2500 = 11 000
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                customer.getId(),
+                context.employee().getId(),
+                List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3)
+        );
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+//        Don't take discount from loyalty status into account when price per night is custom
+        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(11000));
+
+    }
+
+    @Test
+    public void should_calculate_correct_cost_when_default_price_and_single_stay(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
+        Room room = roomWithPrice(BigDecimal.valueOf(700));
 
 
         var singleStayRequest = new SingleRoomStayRequest(
                 room.getId(),
-                LocalDate.now().plusDays(5),
-                LocalDate.now().plusDays(5+days),
+                today.plusDays(5),
+                today.plusDays(5+days),
                 null
         );
 
@@ -213,6 +268,61 @@ class BookingServiceTest {
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3150));
     }
 
+
+    @Test
+    public void should_calculate_correct_cost_when_default_price_and_multiple_stays(){
+//        given
+        int days=5;
+        BookingTestContext context = prepareContext();
+
+        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
+        Room room1 = roomWithPrice(BigDecimal.valueOf(100));
+        Room room2 = roomWithPrice(BigDecimal.valueOf(200));
+        Room room3 = roomWithPrice(BigDecimal.valueOf(300));
+
+        var singleStayRequest1 = new SingleRoomStayRequest(
+                room1.getId(),
+                today.plusDays(5),
+                today.plusDays(5+days),
+                null
+        );
+//        5 * 100 = 500
+
+        var singleStayRequest2 = new SingleRoomStayRequest(
+                room2.getId(),
+                today.plusDays(5),
+                today.plusDays(5+days+1),
+                null
+        );
+//        6 * 200 = 1200
+
+        var singleStayRequest3 = new SingleRoomStayRequest(
+                room3.getId(),
+                today.plusDays(5),
+                today.plusDays(5+days+2),
+                null
+        );
+//        7 * 300 = 2100
+
+//        total = 2100 + 1200 + 500 = 3800
+//        after discount = 3800 * 0.9 = 3420
+
+        var bookingCreateRequest = new BookingCreateRequest(
+                customer.getId(),
+                context.employee().getId(),
+                List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3)
+        );
+
+//        when
+        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+
+        Booking savedBooking = bookingRepository.findById(result.id())
+                .orElseThrow(() -> new AssertionError("Booking not found in database"));
+
+        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3420));
+
+    }
+
     private BookingTestContext prepareContext() {
         RoomType type = roomTypeRepository.save(RoomTestUtils.aValidType().build());
         Room room = roomRepository.save(RoomTestUtils.aValidRoom(type).build());
@@ -227,9 +337,14 @@ class BookingServiceTest {
         return new BookingTestContext(customer, employee, room);
     }
 
-    private Customer prepareCustomerWithDiscount(BigDecimal discount){
+    private Customer customerWithDiscount(BigDecimal discount){
         LoyaltyStatus loyaltyStatus = loyaltyStatusRepository.save(CustomerTestUtils.aValidLoyaltyStatus().discount(discount).build());
         Person person = personRepository.save(PersonTestUtils.aValidPerson().build());
         return customerRepository.save(CustomerTestUtils.aValidCustomer(person,loyaltyStatus).build());
+    }
+
+    private Room roomWithPrice(BigDecimal pricePerNight){
+        RoomType roomType = roomTypeRepository.save(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build());
+        return roomRepository.save(RoomTestUtils.aValidRoom(roomType).build());
     }
 }

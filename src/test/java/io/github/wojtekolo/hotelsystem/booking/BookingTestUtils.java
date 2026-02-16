@@ -27,4 +27,12 @@ public class BookingTestUtils {
                 .activeTo(LocalDate.now().plusDays(15))
                 .status(RoomStayStatus.PLANNED);
     }
+
+    public static SingleRoomStayRequest.SingleRoomStayRequestBuilder aValidRoomStayRequest(Long roomId, LocalDate today){
+        return SingleRoomStayRequest.builder()
+                .roomId(roomId)
+                .from(today.plusDays(1))
+                .to(today.plusDays(10))
+                .customPricePerNight(BigDecimal.valueOf(500));
+    }
 }
