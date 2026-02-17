@@ -4,6 +4,7 @@ import io.github.wojtekolo.hotelsystem.room.dtos.RoomCreateRequest;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomDetails;
 import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
@@ -15,14 +16,10 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/rooms")
+@RequiredArgsConstructor
 public class RoomController {
 
     private final RoomService roomService;
-
-
-    public RoomController(RoomService roomService) {
-        this.roomService = roomService;
-    }
 
     @GetMapping("/list")
     public ResponseEntity<Slice<RoomListItem>> getRooms(@PageableDefault(page = 0, size = 20, sort = "id") Pageable pageable) {
