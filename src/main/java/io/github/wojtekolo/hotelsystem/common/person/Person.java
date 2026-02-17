@@ -25,4 +25,8 @@ public class Person {
 
     @Past
     private LocalDate birthDate;
+
+    public String getFullName(){
+        return name+" "+surname;
+    }
 }

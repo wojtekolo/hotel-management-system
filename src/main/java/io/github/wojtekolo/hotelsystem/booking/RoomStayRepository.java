@@ -2,10 +2,12 @@ package io.github.wojtekolo.hotelsystem.booking;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Repository
 public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
 
     @Query("""
@@ -16,5 +18,5 @@ public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
             AND (rs.activeFrom<?4)
             """
     )
-    List<RoomStay> getConficts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo);
+    List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo);
 }

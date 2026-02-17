@@ -12,7 +12,7 @@ public class BookingConflictException extends RuntimeException{
     private static String generateMessage(List<RoomStay> conflicts){
         StringBuilder builder = new StringBuilder();
         conflicts.forEach(conflict ->
-                builder.append("ID: "+conflict.getId()+", from: "+conflict.getActiveFrom()+", to: "+conflict.getActiveTo()+". "));
+                builder.append("\nID: "+conflict.getId()+", from: "+conflict.getActiveFrom()+", to: "+conflict.getActiveTo()+", "));
         return builder.toString();
     }
 }

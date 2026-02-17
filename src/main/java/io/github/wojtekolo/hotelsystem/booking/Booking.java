@@ -28,7 +28,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "create_employee_id", nullable = false)
-    private Employee createdBy;
+    private Employee createBy;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

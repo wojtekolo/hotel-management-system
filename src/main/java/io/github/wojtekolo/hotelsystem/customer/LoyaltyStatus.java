@@ -16,8 +16,9 @@ public class LoyaltyStatus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(unique = true, nullable = false)
-    private String name;
+    private LoyaltyStatusName name;
 
     @Column(nullable = false)
     private BigDecimal discount;

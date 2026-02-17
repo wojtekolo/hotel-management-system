@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.common;
 
+import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -64,5 +65,12 @@ public class GlobalExceptionHandler {
         Map<String, String> result = new HashMap<>();
         result.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+    }
+
+    @ExceptionHandler(BookingConflictException.class)
+    public ResponseEntity<Map<String,String>> handleIllegalState(BookingConflictException ex){
+        Map<String, String> result = new HashMap<>();
+        result.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 }

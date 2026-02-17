@@ -6,12 +6,12 @@ import java.util.List;
 
 public record BookingDetails(
         Long id,
-        Long customerId,
         String customerName,
-        String customerSurname,
         String customerPhone,
+        String loyaltyDiscount,
         LocalDateTime createTime,
         BigDecimal totalCost,
+        String createBy,
         PaymentStatus paymentStatus,
         BookingStatus status,
         List<RoomStayDetails> stays
