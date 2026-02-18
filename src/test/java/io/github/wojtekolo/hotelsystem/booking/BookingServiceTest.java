@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
+import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.*;
@@ -11,12 +12,9 @@ import io.github.wojtekolo.hotelsystem.room.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -78,11 +76,11 @@ class BookingServiceTest {
                 .thenReturn(Optional.of(employee));
 
         lenient().
-        when(customerRepository.findById(customerId))
+                when(customerRepository.findById(customerId))
                 .thenReturn(Optional.of(customerWithDiscount(BigDecimal.valueOf(0.3))));
 
         lenient().
-        when(bookingRepository.save(any(Booking.class)))
+                when(bookingRepository.save(any(Booking.class)))
                 .thenAnswer(invocation -> {
                     Booking bookingArg = invocation.getArgument(0);
                     bookingArg.setId(10L);
@@ -296,7 +294,7 @@ class BookingServiceTest {
     }
 
     @Test
-    public void should_throw_resource_not_found_when_invalid_employee(){
+    public void should_throw_resource_not_found_when_invalid_employee() {
         var stayRequest = new SingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
@@ -306,7 +304,7 @@ class BookingServiceTest {
 
         var request = new BookingCreateRequest(
                 customerId,
-                employeeId+1,
+                employeeId + 1,
                 List.of(stayRequest)
         );
         assertThatThrownBy(() ->
@@ -314,11 +312,11 @@ class BookingServiceTest {
         )
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Employee")
-                .hasMessageContaining(String.valueOf(employeeId+1));
+                .hasMessageContaining(String.valueOf(employeeId + 1));
     }
 
     @Test
-    public void should_throw_resource_not_found_when_invalid_customer(){
+    public void should_throw_resource_not_found_when_invalid_customer() {
         var stayRequest = new SingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
@@ -327,7 +325,7 @@ class BookingServiceTest {
         );
 
         var request = new BookingCreateRequest(
-                customerId+1,
+                customerId + 1,
                 employeeId,
                 List.of(stayRequest)
         );
@@ -336,11 +334,11 @@ class BookingServiceTest {
         )
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Customer")
-                .hasMessageContaining(String.valueOf(customerId+1));
+                .hasMessageContaining(String.valueOf(customerId + 1));
     }
 
     @Test
-    public void should_throw_resource_not_found_when_invalid_room(){
+    public void should_throw_resource_not_found_when_invalid_room() {
         var stayRequest = new SingleRoomStayRequest(
                 15L,
                 today.plusDays(5),
@@ -361,6 +359,136 @@ class BookingServiceTest {
                 .hasMessageContaining(String.valueOf(15L));
     }
 
+    @Test
+    public void should_throw_booking_conflict_when_single_stay() {
+//        given
+        Long roomId = 1L;
+
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build()).id(roomId).name("roomname").build();
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        LocalDate from = today.plusDays(5);
+        LocalDate to = today.plusDays(10);
+
+        var stayRequest = new SingleRoomStayRequest(
+                roomId,
+                today.plusDays(5),
+                today.plusDays(10),
+                BigDecimal.valueOf(700)
+        );
+
+        var request = new BookingCreateRequest(
+                customerId,
+                employeeId,
+                List.of(stayRequest)
+        );
+        when(roomStayRepository.getConflicts(
+                roomId,
+                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
+                from,
+                to
+        )).thenReturn(List.of(RoomStay.builder()
+                .id(15L)
+                .room(room)
+                .pricePerNight(BigDecimal.valueOf(123))
+                .activeFrom(from.plusDays(1))
+                .activeTo(to)
+                .build()));
+
+//        when
+        assertThatThrownBy(() ->
+                bookingService.addBooking(request)
+        )
+                .isInstanceOf(BookingConflictException.class)
+                .hasMessageContaining(String.valueOf(1L))
+                .hasMessageContaining(String.valueOf(15L))
+                .hasMessageContaining("roomname")
+                .hasMessageContaining(String.valueOf(to));
+    }
+
+    @Test
+    public void should_throw_booking_conflict_when_multiple_stays() {
+//        given
+        Long roomId1 = 1L;
+        Long roomId2 = 2L;
+        Long roomId3 = 3L;
+
+        Room room1 = roomWithName("roomname1", roomId1);
+        Room room2 = roomWithName("roomname2", roomId2);
+        Room room3 = roomWithName("roomname3", roomId2);
+        when(roomRepository.findById(roomId1)).thenReturn(Optional.of(room1));
+        when(roomRepository.findById(roomId2)).thenReturn(Optional.of(room2));
+        when(roomRepository.findById(roomId3)).thenReturn(Optional.of(room3));
+
+        LocalDate from = today.plusDays(5);
+        LocalDate to = today.plusDays(10);
+
+        var stayRequest1 = new SingleRoomStayRequest(
+                roomId1,
+                from,
+                to,
+                BigDecimal.valueOf(700)
+        );
+        var stayRequest2 = new SingleRoomStayRequest(
+                roomId2,
+                from,
+                to,
+                BigDecimal.valueOf(700)
+        );
+
+        var request = new BookingCreateRequest(
+                customerId,
+                employeeId,
+                List.of(stayRequest1, stayRequest2)
+        );
+
+        when(roomStayRepository.getConflicts(
+                roomId1,
+                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
+                from,
+                to
+        )).thenReturn(List.of(RoomStay.builder()
+                .id(15L)
+                .room(room1)
+                .activeFrom(from)
+                .activeTo(to)
+                .build()));
+
+        when(roomStayRepository.getConflicts(
+                roomId2,
+                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
+                from,
+                to
+        )).thenReturn(List.of(
+                RoomStay.builder()
+                        .id(16L)
+                        .room(room2)
+                        .activeFrom(from)
+                        .activeTo(to.plusDays(1))
+                        .build(),
+                RoomStay.builder()
+                        .id(17L)
+                        .room(room2)
+                        .activeFrom(from)
+                        .activeTo(to)
+                        .build())
+        );
+
+//        when
+        assertThatThrownBy(() ->
+                bookingService.addBooking(request)
+        )
+                .isInstanceOf(BookingConflictException.class)
+                .hasMessageContaining(String.valueOf(1L))
+                .hasMessageContaining(String.valueOf(2L))
+                .hasMessageContaining(String.valueOf(15L))
+                .hasMessageContaining(String.valueOf(16L))
+                .hasMessageContaining(String.valueOf(17L))
+                .hasMessageContaining("roomname1")
+                .hasMessageContaining("roomname2")
+                .hasMessageContaining(String.valueOf(to))
+                .hasMessageContaining(String.valueOf(to.plusDays(1)));
+    }
+
     private Customer customerWithDiscount(BigDecimal discount) {
         return CustomerTestUtils
                 .aValidCustomer(PersonTestUtils.aValidPerson().id(customerId).build(),
@@ -375,6 +503,14 @@ class BookingServiceTest {
     private Room roomWithPrice(BigDecimal pricePerNight, Long id) {
         return RoomTestUtils
                 .aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
+                .id(id)
+                .build();
+    }
+
+    private Room roomWithName(String name, Long id) {
+        return RoomTestUtils
+                .aValidRoom(RoomTestUtils.aValidType().build())
+                .name(name)
                 .id(id)
                 .build();
     }
