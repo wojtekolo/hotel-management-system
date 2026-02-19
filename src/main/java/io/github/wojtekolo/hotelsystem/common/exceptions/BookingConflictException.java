@@ -1,33 +1,38 @@
 package io.github.wojtekolo.hotelsystem.common.exceptions;
 
-import io.github.wojtekolo.hotelsystem.booking.RoomConflict;
-import io.github.wojtekolo.hotelsystem.booking.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.RoomStayConflict;
+import io.github.wojtekolo.hotelsystem.booking.RoomStayConflictDetails;
+import lombok.Getter;
 
 import java.util.List;
 
+@Getter
 public class BookingConflictException extends RuntimeException{
-    public BookingConflictException(List<RoomConflict> conflicts) {
+    List<RoomStayConflict> conflicts;
+
+    public BookingConflictException(List<RoomStayConflict> conflicts) {
         super(generateMessage(conflicts));
+        this.conflicts = conflicts;
     }
 
-    private static String generateMessage(List<RoomConflict> conflicts){
+    private static String generateMessage(List<RoomStayConflict> conflicts){
         StringBuilder builder = new StringBuilder();
-        for (RoomConflict conflict: conflicts){
+        for (RoomStayConflict conflict: conflicts){
             builder.append("\nRoom ")
-                    .append(conflict.room().getName())
+                    .append(conflict.roomName())
                     .append(" is booked for selected period. Conflicting bookings: ")
                     .append(generateRoomMessage(conflict.conflicts()));
         }
         return builder.toString();
     }
-    private static String generateRoomMessage(List<RoomStay> conflicts){
+    private static String generateRoomMessage(List<RoomStayConflictDetails> conflicts){
         StringBuilder builder = new StringBuilder();
         conflicts.forEach(conflict ->
-                builder.append("\nID: ").append(conflict.getId())
+                builder.append("\nID: ").append(conflict.roomStayId())
                         .append(", from: ")
-                        .append(conflict.getActiveFrom())
+                        .append(conflict.from())
                         .append(", to: ")
-                        .append(conflict.getActiveTo())
+                        .append(conflict.to())
                         .append(", "));
         return builder.toString();
     }

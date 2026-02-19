@@ -96,7 +96,7 @@ public class BookingService {
     }
 
     private void addStays(Booking booking, List<SingleRoomStayRequest> stayRequests, Customer customer, Employee employee) {
-        List<RoomConflict> allConflicts = new ArrayList<>();
+        List<RoomStayConflict> allConflicts = new ArrayList<>();
         for (SingleRoomStayRequest stayRequest : stayRequests) {
 
             Room room = roomRepository.findById(stayRequest.roomId())
@@ -105,7 +105,13 @@ public class BookingService {
             List<RoomStay> conflicts = roomStayRepository.getConflicts(room.getId(), List.of(RoomStayStatus.ACTIVE,
                     RoomStayStatus.PLANNED), stayRequest.from(), stayRequest.to());
 
-            if (!conflicts.isEmpty()) allConflicts.add(new RoomConflict(room, conflicts));
+            if (!conflicts.isEmpty()){
+                List<RoomStayConflictDetails> details = new ArrayList<>();
+                for (RoomStay conflict : conflicts){
+                    details.add(bookingMapper.toRoomStayConflictDetails(conflict));
+                }
+                allConflicts.add(new RoomStayConflict(room.getId(),room.getName(), details));
+            }
 
             booking.addStay(createRoomStay(booking, room, customer, stayRequest, employee));
         }

@@ -32,4 +32,9 @@ public interface BookingMapper {
     @Mapping(target = "checkInBy", source = "roomStay.checkInBy")
     @Mapping(target = "checkOutBy", source = "roomStay.checkOutBy")
     RoomStayDetails toRoomStayDetails(RoomStay roomStay, BigDecimal calculatedTotalCost);
+
+    @Mapping(target = "bookingId", source = "booking.id")
+    @Mapping(target = "from", source = "activeFrom")
+    @Mapping(target = "to", source = "activeTo")
+    RoomStayConflictDetails toRoomStayConflictDetails(RoomStay roomStay);
 }
