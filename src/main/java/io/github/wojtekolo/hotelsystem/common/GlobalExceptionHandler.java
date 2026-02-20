@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.common;
 
+import io.github.wojtekolo.hotelsystem.booking.BookingConflictResponse;
 import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
@@ -68,9 +69,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BookingConflictException.class)
-    public ResponseEntity<Map<String,String>> handleIllegalState(BookingConflictException ex){
-        Map<String, String> result = new HashMap<>();
-        result.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    public ResponseEntity<BookingConflictResponse> handleBookingConflict(BookingConflictException ex){
+        var response = new BookingConflictResponse(
+                ex.getMessage(),
+                ex.getConflicts()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }

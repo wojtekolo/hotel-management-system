@@ -34,6 +34,7 @@ public interface BookingMapper {
     RoomStayDetails toRoomStayDetails(RoomStay roomStay, BigDecimal calculatedTotalCost);
 
     @Mapping(target = "bookingId", source = "booking.id")
+    @Mapping(target = "roomStayId", source = "id")
     @Mapping(target = "from", source = "activeFrom")
     @Mapping(target = "to", source = "activeTo")
     RoomStayConflictDetails toRoomStayConflictDetails(RoomStay roomStay);
