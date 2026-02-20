@@ -80,22 +80,20 @@ class BookingServiceTest {
     public void should_calculate_correct_cost_when_custom_price_and_single_stay() {
 //        given
         setUpEmployee();
-        setUpCustomer();
+        setUpCustomerWithDiscount(BigDecimal.valueOf(0.03));
         setUpCorrectBooking();
 
         Long roomId = 1L;
 
-        var stayRequest = new SingleRoomStayRequest(
+        var stayRequest = createSingleRoomStayRequestWithPrice(
                 roomId,
                 today.plusDays(5),
                 today.plusDays(10),
-                BigDecimal.valueOf(700)
-        );
+                BigDecimal.valueOf(700));
 
         var request = createBookingRequest(List.of(stayRequest));
 
-        Room room = roomWithPrice(BigDecimal.valueOf(500), roomId);
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        setUpRoomWithPrice(roomId, BigDecimal.valueOf(500));
 
 //        when
         BookingDetails result = bookingService.addBooking(request);
@@ -113,24 +111,16 @@ class BookingServiceTest {
     public void should_calculate_correct_cost_when_custom_price_and_multiple_stays() {
 //        given
         setUpEmployee();
-        setUpCustomer();
+        setUpCustomerWithDiscount(BigDecimal.valueOf(0.03));
         setUpCorrectBooking();
 
         int days = 5;
 
-        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        Room room1 = setUpRoomWithPrice(1L, BigDecimal.valueOf(100));
+        Room room2 = setUpRoomWithPrice(2L, BigDecimal.valueOf(200));
+        Room room3 = setUpRoomWithPrice(3L, BigDecimal.valueOf(300));
 
-        Room room1 = roomWithPrice(BigDecimal.valueOf(100), 1L);
-        Room room2 = roomWithPrice(BigDecimal.valueOf(200), 2L);
-        Room room3 = roomWithPrice(BigDecimal.valueOf(300), 3L);
-
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room1));
-        when(roomRepository.findById(2L)).thenReturn(Optional.of(room2));
-        when(roomRepository.findById(3L)).thenReturn(Optional.of(room3));
-
-
-        var singleStayRequest1 = new SingleRoomStayRequest(
+        var singleStayRequest1 = createSingleRoomStayRequestWithPrice(
                 room1.getId(),
                 today.plusDays(5),
                 today.plusDays(5 + days),
@@ -138,7 +128,7 @@ class BookingServiceTest {
         );
 //        5 * 500 = 2500
 
-        var singleStayRequest2 = new SingleRoomStayRequest(
+        var singleStayRequest2 = createSingleRoomStayRequestWithPrice(
                 room2.getId(),
                 today.plusDays(5),
                 today.plusDays(6 + days),
@@ -146,7 +136,7 @@ class BookingServiceTest {
         );
 //        6 * 600 = 3600
 
-        var singleStayRequest3 = new SingleRoomStayRequest(
+        var singleStayRequest3 = createSingleRoomStayRequestWithPrice(
                 room3.getId(),
                 today.plusDays(5),
                 today.plusDays(7 + days),
@@ -177,22 +167,17 @@ class BookingServiceTest {
     public void should_calculate_correct_cost_when_default_price_and_single_stay() {
 //        given
         setUpEmployee();
-        setUpCustomer();
+        setUpCustomerWithDiscount(BigDecimal.valueOf(0.1));
         setUpCorrectBooking();
 
         int days = 5;
 
-        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        Room room = roomWithPrice(BigDecimal.valueOf(700), 1L);
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        Room room = setUpRoomWithPrice(1L, BigDecimal.valueOf(700));
 
-
-        var singleStayRequest = new SingleRoomStayRequest(
+        var singleStayRequest = createSingleRoomStayRequest(
                 room.getId(),
                 today.plusDays(5),
-                today.plusDays(5 + days),
-                null
+                today.plusDays(5 + days)
         );
 
         BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest));
@@ -212,43 +197,35 @@ class BookingServiceTest {
     public void should_calculate_correct_cost_when_default_price_and_multiple_stays() {
 //        given
         setUpEmployee();
-        setUpCustomer();
+        setUpCustomerWithDiscount(BigDecimal.valueOf(0.1));
         setUpCorrectBooking();
 
         int days = 5;
 
-        Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        Room room1 = roomWithPrice(BigDecimal.valueOf(100), 1L);
-        Room room2 = roomWithPrice(BigDecimal.valueOf(200), 2L);
-        Room room3 = roomWithPrice(BigDecimal.valueOf(300), 3L);
 
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room1));
-        when(roomRepository.findById(2L)).thenReturn(Optional.of(room2));
-        when(roomRepository.findById(3L)).thenReturn(Optional.of(room3));
+        Room room1 = setUpRoomWithPrice(1L, BigDecimal.valueOf(100));
+        Room room2 = setUpRoomWithPrice(2L, BigDecimal.valueOf(200));
+        Room room3 = setUpRoomWithPrice(3L, BigDecimal.valueOf(300));
 
 
-        var singleStayRequest1 = new SingleRoomStayRequest(
+        var singleStayRequest1 = createSingleRoomStayRequest(
                 room1.getId(),
                 today.plusDays(5),
-                today.plusDays(5 + days),
-                null
+                today.plusDays(5 + days)
         );
 //        5 * 100 = 500
 
-        var singleStayRequest2 = new SingleRoomStayRequest(
+        var singleStayRequest2 = createSingleRoomStayRequest(
                 room2.getId(),
                 today.plusDays(5),
-                today.plusDays(5 + days + 1),
-                null
+                today.plusDays(5 + days + 1)
         );
 //        6 * 200 = 1200
 
-        var singleStayRequest3 = new SingleRoomStayRequest(
+        var singleStayRequest3 = createSingleRoomStayRequest(
                 room3.getId(),
                 today.plusDays(5),
-                today.plusDays(5 + days + 2),
-                null
+                today.plusDays(5 + days + 2)
         );
 //        7 * 300 = 2100
 
@@ -275,11 +252,10 @@ class BookingServiceTest {
     public void should_throw_resource_not_found_when_invalid_employee() {
 //        given
 
-        var stayRequest = new SingleRoomStayRequest(
+        var stayRequest = createSingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
-                today.plusDays(10),
-                BigDecimal.valueOf(700)
+                today.plusDays(10)
         );
 
         var request = new BookingCreateRequest(
@@ -299,11 +275,10 @@ class BookingServiceTest {
     public void should_throw_resource_not_found_when_invalid_customer() {
         setUpEmployee();
 
-        var stayRequest = new SingleRoomStayRequest(
+        var stayRequest = createSingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
-                today.plusDays(10),
-                BigDecimal.valueOf(700)
+                today.plusDays(10)
         );
 
         var request = new BookingCreateRequest(
@@ -325,11 +300,10 @@ class BookingServiceTest {
         setUpEmployee();
         setUpCustomer();
 
-        var stayRequest = new SingleRoomStayRequest(
+        var stayRequest = createSingleRoomStayRequest(
                 15L,
                 today.plusDays(5),
-                today.plusDays(10),
-                BigDecimal.valueOf(700)
+                today.plusDays(10)
         );
 
         BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
@@ -350,16 +324,15 @@ class BookingServiceTest {
 
         Long roomId = 1L;
 
-        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build()).id(roomId).name("roomname").build();
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(room));
+        Room room = setUpRoomWithName(1L, "roomname");
+
         LocalDate from = today.plusDays(5);
         LocalDate to = today.plusDays(10);
 
-        var stayRequest = new SingleRoomStayRequest(
+        var stayRequest = createSingleRoomStayRequest(
                 roomId,
                 today.plusDays(5),
-                today.plusDays(10),
-                BigDecimal.valueOf(700)
+                today.plusDays(10)
         );
 
         BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
@@ -402,43 +375,33 @@ class BookingServiceTest {
         setUpEmployee();
         setUpCustomer();
 
-        Long roomId1 = 1L;
-        Long roomId2 = 2L;
-        Long roomId3 = 3L;
-
-        Room room1 = roomWithName("roomname1", roomId1);
-        Room room2 = roomWithName("roomname2", roomId2);
-        Room room3 = roomWithName("roomname3", roomId3);
-        when(roomRepository.findById(roomId1)).thenReturn(Optional.of(room1));
-        when(roomRepository.findById(roomId2)).thenReturn(Optional.of(room2));
-        when(roomRepository.findById(roomId3)).thenReturn(Optional.of(room3));
+        Room room1 = setUpRoomWithName(1L, "roomname1");
+        Room room2 = setUpRoomWithName(2L, "roomname2");
+        Room room3 = setUpRoomWithName(3L, "roomname3");
 
         LocalDate from = today.plusDays(5);
         LocalDate to = today.plusDays(10);
 
-        var stayRequest1 = new SingleRoomStayRequest(
-                roomId1,
+        var stayRequest1 = createSingleRoomStayRequest(
+                room1.getId(),
                 from,
-                to,
-                BigDecimal.valueOf(700)
+                to
         );
-        var stayRequest2 = new SingleRoomStayRequest(
-                roomId2,
+        var stayRequest2 = createSingleRoomStayRequest(
+                room2.getId(),
                 from,
-                to,
-                BigDecimal.valueOf(700)
+                to
         );
-        var stayRequest3 = new SingleRoomStayRequest(
-                roomId3,
+        var stayRequest3 = createSingleRoomStayRequest(
+                room3.getId(),
                 from,
-                to,
-                BigDecimal.valueOf(700)
+                to
         );
 
         BookingCreateRequest request = createBookingRequest(List.of(stayRequest1, stayRequest2, stayRequest3));
 
         when(roomStayRepository.getConflicts(
-                roomId1,
+                room1.getId(),
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to
@@ -452,7 +415,7 @@ class BookingServiceTest {
         );
 
         when(roomStayRepository.getConflicts(
-                roomId2,
+                room2.getId(),
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to
@@ -473,7 +436,7 @@ class BookingServiceTest {
         );
 
         when(roomStayRepository.getConflicts(
-                roomId3,
+                room3.getId(),
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to
@@ -502,37 +465,12 @@ class BookingServiceTest {
 
     }
 
-    private Customer customerWithDiscount(BigDecimal discount) {
-        return CustomerTestUtils
-                .aValidCustomer(PersonTestUtils.aValidPerson().id(customerId).build(),
-                        CustomerTestUtils
-                                .aValidLoyaltyStatus()
-                                .discount(discount)
-                                .build())
-                .id(customerId)
-                .build();
-    }
-
-    private Room roomWithPrice(BigDecimal pricePerNight, Long id) {
-        return RoomTestUtils
-                .aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
-                .id(id)
-                .build();
-    }
-
-    private Room roomWithName(String name, Long id) {
-        return RoomTestUtils
-                .aValidRoom(RoomTestUtils.aValidType().build())
-                .name(name)
-                .id(id)
-                .build();
-    }
 
     private Map<Long, BigDecimal> mapStaysPrices(List<RoomStayDetails> stays) {
         Map<Long, BigDecimal> roomsPricePerNight = new HashMap<>();
 
-        for (int i = 0; i < stays.size(); i++) {
-            roomsPricePerNight.put(stays.get(i).roomId(), stays.get(i).pricePerNight());
+        for (RoomStayDetails stay : stays) {
+            roomsPricePerNight.put(stay.roomId(), stay.pricePerNight());
         }
         return roomsPricePerNight;
     }
@@ -548,8 +486,22 @@ class BookingServiceTest {
     }
 
     private void setUpCustomer() {
+        setUpCustomerWithDiscount(BigDecimal.valueOf(0.13));
+    }
+
+    private void setUpCustomerWithDiscount(BigDecimal discount) {
+
+        Customer customer = CustomerTestUtils
+                .aValidCustomer(PersonTestUtils.aValidPerson().id(customerId).build(),
+                        CustomerTestUtils
+                                .aValidLoyaltyStatus()
+                                .discount(discount)
+                                .build())
+                .id(customerId)
+                .build();
+
         when(customerRepository.findById(customerId))
-                .thenReturn(Optional.of(customerWithDiscount(BigDecimal.valueOf(0.3))));
+                .thenReturn(Optional.of(customer));
     }
 
     private void setUpCorrectBooking() {
@@ -561,11 +513,46 @@ class BookingServiceTest {
                 });
     }
 
-    private BookingCreateRequest createBookingRequest(List<SingleRoomStayRequest> stayRequests){
+    private Room setUpRoomWithName(Long id, String name) {
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build())
+                .id(id)
+                .name(name)
+                .build();
+        when(roomRepository.findById(id)).thenReturn(Optional.of(room));
+        return room;
+    }
+
+    private Room setUpRoomWithPrice(Long id, BigDecimal pricePerNight) {
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
+                .id(id)
+                .build();
+        when(roomRepository.findById(id)).thenReturn(Optional.of(room));
+        return room;
+    }
+
+    private BookingCreateRequest createBookingRequest(List<SingleRoomStayRequest> stayRequests) {
         return new BookingCreateRequest(
                 customerId,
                 employeeId,
                 stayRequests
+        );
+    }
+
+    private SingleRoomStayRequest createSingleRoomStayRequest(Long roomId, LocalDate from, LocalDate to) {
+        return new SingleRoomStayRequest(
+                roomId,
+                from,
+                to,
+                null
+        );
+    }
+
+    private SingleRoomStayRequest createSingleRoomStayRequestWithPrice(Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
+        return new SingleRoomStayRequest(
+                roomId,
+                from,
+                to,
+                pricePerNight
         );
     }
 }
