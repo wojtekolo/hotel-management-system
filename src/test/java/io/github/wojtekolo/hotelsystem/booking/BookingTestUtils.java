@@ -6,6 +6,7 @@ import io.github.wojtekolo.hotelsystem.room.Room;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class BookingTestUtils {
 
@@ -14,7 +15,8 @@ public class BookingTestUtils {
                 .customer(customer)
                 .createBy(createEmployee)
                 .status(BookingStatus.PLANNED)
-                .paymentStatus(PaymentStatus.UNPAID);
+                .paymentStatus(PaymentStatus.UNPAID)
+                .stays(new ArrayList<>());
     }
 
     public static RoomStay.RoomStayBuilder aValidRoomStay(Booking booking, Room room, Employee createEmployee){

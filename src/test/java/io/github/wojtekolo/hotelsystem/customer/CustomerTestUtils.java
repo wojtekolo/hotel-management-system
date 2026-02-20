@@ -18,6 +18,7 @@ public class CustomerTestUtils {
 
     public static LoyaltyStatus.LoyaltyStatusBuilder aValidLoyaltyStatus(){
         return LoyaltyStatus.builder()
+                .discount(BigDecimal.ZERO)
                 .name(LoyaltyStatusName.BASIC);
     }
 }
