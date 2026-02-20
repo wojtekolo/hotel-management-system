@@ -9,7 +9,6 @@ import io.github.wojtekolo.hotelsystem.employee.EmployeeMapper;
 import io.github.wojtekolo.hotelsystem.employee.EmployeeRepository;
 import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
 import io.github.wojtekolo.hotelsystem.room.*;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +25,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
@@ -66,27 +64,6 @@ class BookingServiceTest {
 
     @BeforeEach
     void setUp() {
-        Employee employee = EmployeeTestUtils
-                .aValidEmployee(PersonTestUtils.aValidPerson().id(employeeId).build())
-                .id(employeeId)
-                .build();
-
-        lenient()
-                .when(employeeRepository.findById(employeeId))
-                .thenReturn(Optional.of(employee));
-
-        lenient().
-                when(customerRepository.findById(customerId))
-                .thenReturn(Optional.of(customerWithDiscount(BigDecimal.valueOf(0.3))));
-
-        lenient().
-                when(bookingRepository.save(any(Booking.class)))
-                .thenAnswer(invocation -> {
-                    Booking bookingArg = invocation.getArgument(0);
-                    bookingArg.setId(10L);
-                    return bookingArg;
-                });
-
         BookingMapper bookingMapper = new BookingMapperImpl(customerMapper, employeeMapper);
 
         bookingService = new BookingService(
@@ -102,6 +79,10 @@ class BookingServiceTest {
     @Test
     public void should_calculate_correct_cost_when_custom_price_and_single_stay() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+        setUpCorrectBooking();
+
         Long roomId = 1L;
 
         var stayRequest = new SingleRoomStayRequest(
@@ -111,11 +92,7 @@ class BookingServiceTest {
                 BigDecimal.valueOf(700)
         );
 
-        var request = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(stayRequest)
-        );
+        var request = createBookingRequest(List.of(stayRequest));
 
         Room room = roomWithPrice(BigDecimal.valueOf(500), roomId);
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
@@ -135,6 +112,10 @@ class BookingServiceTest {
     @Test
     public void should_calculate_correct_cost_when_custom_price_and_multiple_stays() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+        setUpCorrectBooking();
+
         int days = 5;
 
         Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
@@ -174,14 +155,10 @@ class BookingServiceTest {
 //        7 * 700 = 4900
 //        total = 4900 + 3600 + 2500 = 11 000
 
-        var bookingCreateRequest = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3));
 
 //        when
-        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+        BookingDetails result = bookingService.addBooking(request);
 
 
 //        then
@@ -199,6 +176,10 @@ class BookingServiceTest {
     @Test
     public void should_calculate_correct_cost_when_default_price_and_single_stay() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+        setUpCorrectBooking();
+
         int days = 5;
 
         Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
@@ -214,14 +195,10 @@ class BookingServiceTest {
                 null
         );
 
-        var bookingCreateRequest = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(singleStayRequest)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest));
 
 //        when
-        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+        BookingDetails result = bookingService.addBooking(request);
 
         assertThat(result.stays()).isNotNull();
         assertThat(result.stays()).hasSize(1);
@@ -234,6 +211,10 @@ class BookingServiceTest {
     @Test
     public void should_calculate_correct_cost_when_default_price_and_multiple_stays() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+        setUpCorrectBooking();
+
         int days = 5;
 
         Customer customer = customerWithDiscount(BigDecimal.valueOf(0.1));
@@ -274,14 +255,11 @@ class BookingServiceTest {
 //        default total = 2100 + 1200 + 500 = 3800
 //        after loyalty status loyaltyDiscount = 3800 * 0.9 = 3420
 
-        var bookingCreateRequest = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3));
+
 
 //        when
-        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
+        BookingDetails result = bookingService.addBooking(request);
 
 //        then
         Map<Long, BigDecimal> staysPricePerNight = mapStaysPrices(result.stays());
@@ -295,6 +273,8 @@ class BookingServiceTest {
 
     @Test
     public void should_throw_resource_not_found_when_invalid_employee() {
+//        given
+
         var stayRequest = new SingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
@@ -317,6 +297,8 @@ class BookingServiceTest {
 
     @Test
     public void should_throw_resource_not_found_when_invalid_customer() {
+        setUpEmployee();
+
         var stayRequest = new SingleRoomStayRequest(
                 1L,
                 today.plusDays(5),
@@ -329,6 +311,7 @@ class BookingServiceTest {
                 employeeId,
                 List.of(stayRequest)
         );
+
         assertThatThrownBy(() ->
                 bookingService.addBooking(request)
         )
@@ -339,6 +322,9 @@ class BookingServiceTest {
 
     @Test
     public void should_throw_resource_not_found_when_invalid_room() {
+        setUpEmployee();
+        setUpCustomer();
+
         var stayRequest = new SingleRoomStayRequest(
                 15L,
                 today.plusDays(5),
@@ -346,11 +332,8 @@ class BookingServiceTest {
                 BigDecimal.valueOf(700)
         );
 
-        var request = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(stayRequest)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
+
         assertThatThrownBy(() ->
                 bookingService.addBooking(request)
         )
@@ -362,6 +345,9 @@ class BookingServiceTest {
     @Test
     public void should_throw_booking_conflict_when_single_stay() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+
         Long roomId = 1L;
 
         Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build()).id(roomId).name("roomname").build();
@@ -376,11 +362,8 @@ class BookingServiceTest {
                 BigDecimal.valueOf(700)
         );
 
-        var request = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(stayRequest)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
+
         when(roomStayRepository.getConflicts(
                 roomId,
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
@@ -399,7 +382,7 @@ class BookingServiceTest {
                 bookingService.addBooking(request)
         )
                 .isInstanceOf(BookingConflictException.class)
-                .satisfies(ex ->{
+                .satisfies(ex -> {
                     BookingConflictException bookingEx = (BookingConflictException) ex;
 
                     assertThat(bookingEx.getConflicts())
@@ -414,8 +397,11 @@ class BookingServiceTest {
     }
 
     @Test
-    public void response_should_contain_only_rooms_unavailable_in_chosen_period() {
+    public void booking_conflict_response_should_contain_only_rooms_unavailable_in_chosen_period() {
 //        given
+        setUpEmployee();
+        setUpCustomer();
+
         Long roomId1 = 1L;
         Long roomId2 = 2L;
         Long roomId3 = 3L;
@@ -449,11 +435,7 @@ class BookingServiceTest {
                 BigDecimal.valueOf(700)
         );
 
-        var request = new BookingCreateRequest(
-                customerId,
-                employeeId,
-                List.of(stayRequest1, stayRequest2, stayRequest3)
-        );
+        BookingCreateRequest request = createBookingRequest(List.of(stayRequest1, stayRequest2, stayRequest3));
 
         when(roomStayRepository.getConflicts(
                 roomId1,
@@ -553,5 +535,37 @@ class BookingServiceTest {
             roomsPricePerNight.put(stays.get(i).roomId(), stays.get(i).pricePerNight());
         }
         return roomsPricePerNight;
+    }
+
+
+    private void setUpEmployee() {
+        Employee employee = EmployeeTestUtils
+                .aValidEmployee(PersonTestUtils.aValidPerson().id(employeeId).build())
+                .id(employeeId)
+                .build();
+
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(employee));
+    }
+
+    private void setUpCustomer() {
+        when(customerRepository.findById(customerId))
+                .thenReturn(Optional.of(customerWithDiscount(BigDecimal.valueOf(0.3))));
+    }
+
+    private void setUpCorrectBooking() {
+        when(bookingRepository.save(any(Booking.class)))
+                .thenAnswer(invocation -> {
+                    Booking bookingArg = invocation.getArgument(0);
+                    bookingArg.setId(10L);
+                    return bookingArg;
+                });
+    }
+
+    private BookingCreateRequest createBookingRequest(List<SingleRoomStayRequest> stayRequests){
+        return new BookingCreateRequest(
+                customerId,
+                employeeId,
+                stayRequests
+        );
     }
 }
