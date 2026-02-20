@@ -9,6 +9,7 @@ import io.github.wojtekolo.hotelsystem.employee.EmployeeMapper;
 import io.github.wojtekolo.hotelsystem.employee.EmployeeRepository;
 import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
 import io.github.wojtekolo.hotelsystem.room.*;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -399,14 +399,22 @@ class BookingServiceTest {
                 bookingService.addBooking(request)
         )
                 .isInstanceOf(BookingConflictException.class)
-                .hasMessageContaining(String.valueOf(1L))
-                .hasMessageContaining(String.valueOf(15L))
-                .hasMessageContaining("roomname")
-                .hasMessageContaining(String.valueOf(to));
+                .satisfies(ex ->{
+                    BookingConflictException bookingEx = (BookingConflictException) ex;
+
+                    assertThat(bookingEx.getConflicts())
+                            .extracting(RoomStayConflict::roomName)
+                            .contains("roomname");
+
+                    assertThat(bookingEx.getConflicts())
+                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
+                            .extracting(RoomStayConflictDetails::roomStayId)
+                            .contains(15L);
+                });
     }
 
     @Test
-    public void should_throw_booking_conflict_when_multiple_stays() {
+    public void response_should_contain_only_rooms_unavailable_in_chosen_period() {
 //        given
         Long roomId1 = 1L;
         Long roomId2 = 2L;
@@ -414,7 +422,7 @@ class BookingServiceTest {
 
         Room room1 = roomWithName("roomname1", roomId1);
         Room room2 = roomWithName("roomname2", roomId2);
-        Room room3 = roomWithName("roomname3", roomId2);
+        Room room3 = roomWithName("roomname3", roomId3);
         when(roomRepository.findById(roomId1)).thenReturn(Optional.of(room1));
         when(roomRepository.findById(roomId2)).thenReturn(Optional.of(room2));
         when(roomRepository.findById(roomId3)).thenReturn(Optional.of(room3));
@@ -434,11 +442,17 @@ class BookingServiceTest {
                 to,
                 BigDecimal.valueOf(700)
         );
+        var stayRequest3 = new SingleRoomStayRequest(
+                roomId3,
+                from,
+                to,
+                BigDecimal.valueOf(700)
+        );
 
         var request = new BookingCreateRequest(
                 customerId,
                 employeeId,
-                List.of(stayRequest1, stayRequest2)
+                List.of(stayRequest1, stayRequest2, stayRequest3)
         );
 
         when(roomStayRepository.getConflicts(
@@ -446,47 +460,64 @@ class BookingServiceTest {
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to
-        )).thenReturn(List.of(RoomStay.builder()
-                .id(15L)
-                .room(room1)
-                .activeFrom(from)
-                .activeTo(to)
-                .build()));
+        )).thenReturn(
+                List.of(RoomStay.builder()
+                        .id(15L)
+                        .room(room1)
+                        .activeFrom(from)
+                        .activeTo(to)
+                        .build())
+        );
 
         when(roomStayRepository.getConflicts(
                 roomId2,
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to
-        )).thenReturn(List.of(
-                RoomStay.builder()
-                        .id(16L)
-                        .room(room2)
-                        .activeFrom(from)
-                        .activeTo(to.plusDays(1))
-                        .build(),
-                RoomStay.builder()
-                        .id(17L)
-                        .room(room2)
-                        .activeFrom(from)
-                        .activeTo(to)
-                        .build())
+        )).thenReturn(
+                List.of(
+                        RoomStay.builder()
+                                .id(16L)
+                                .room(room2)
+                                .activeFrom(from)
+                                .activeTo(to.plusDays(1))
+                                .build(),
+                        RoomStay.builder()
+                                .id(17L)
+                                .room(room2)
+                                .activeFrom(from)
+                                .activeTo(to)
+                                .build())
+        );
+
+        when(roomStayRepository.getConflicts(
+                roomId3,
+                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
+                from,
+                to
+        )).thenReturn(
+                List.of()
         );
 
 //        when
-        assertThatThrownBy(() ->
-                bookingService.addBooking(request)
-        )
+        assertThatThrownBy(() -> bookingService.addBooking(request)).isInstanceOf(BookingConflictException.class)
                 .isInstanceOf(BookingConflictException.class)
-                .hasMessageContaining(String.valueOf(1L))
-                .hasMessageContaining(String.valueOf(2L))
-                .hasMessageContaining(String.valueOf(15L))
-                .hasMessageContaining(String.valueOf(16L))
-                .hasMessageContaining(String.valueOf(17L))
-                .hasMessageContaining("roomname1")
-                .hasMessageContaining("roomname2")
-                .hasMessageContaining(String.valueOf(to))
-                .hasMessageContaining(String.valueOf(to.plusDays(1)));
+                .satisfies(e -> {
+                    BookingConflictException bookingEx = (BookingConflictException) e;
+
+                    assertThat(bookingEx.getConflicts())
+                            .hasSize(2)
+                            .extracting(RoomStayConflict::roomName)
+                            .containsExactlyInAnyOrder("roomname1", "roomname2")
+                            .doesNotContain("roomname3");
+
+                    assertThat(bookingEx.getConflicts())
+                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
+                            .extracting(RoomStayConflictDetails::roomStayId)
+                            .containsExactlyInAnyOrder(15L, 16L, 17L);
+                });
+
+
     }
 
     private Customer customerWithDiscount(BigDecimal discount) {
