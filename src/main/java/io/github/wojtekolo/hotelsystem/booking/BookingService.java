@@ -1,6 +1,7 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
 import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
+import io.github.wojtekolo.hotelsystem.common.exceptions.BookingRequestConflictException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.customer.Customer;
 import io.github.wojtekolo.hotelsystem.customer.CustomerRepository;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,8 @@ public class BookingService {
         Employee employee = findEmployee(request.employeeId());
         Customer customer = findCustomer(request.customerId());
         Booking booking = createBooking(customer, employee);
+
+        validateInternalConflicts(request.stays());
 
         addStays(booking, request.stays(), customer, employee);
 
@@ -105,12 +110,12 @@ public class BookingService {
             List<RoomStay> conflicts = roomStayRepository.getConflicts(room.getId(), List.of(RoomStayStatus.ACTIVE,
                     RoomStayStatus.PLANNED), stayRequest.from(), stayRequest.to());
 
-            if (!conflicts.isEmpty()){
+            if (!conflicts.isEmpty()) {
                 List<RoomStayConflictDetails> details = new ArrayList<>();
-                for (RoomStay conflict : conflicts){
+                for (RoomStay conflict : conflicts) {
                     details.add(bookingMapper.toRoomStayConflictDetails(conflict));
                 }
-                allConflicts.add(new RoomStayConflict(room.getId(),room.getName(), details));
+                allConflicts.add(new RoomStayConflict(room.getId(), room.getName(), details));
             }
 
             booking.addStay(createRoomStay(booking, room, customer, stayRequest, employee));
@@ -120,11 +125,42 @@ public class BookingService {
 
     private List<RoomStayDetails> toRoomStayDetailsList(List<RoomStay> roomStays) {
         List<RoomStayDetails> result = new ArrayList<>();
-        for (int i = 0; i < roomStays.size(); i++) {
+        for (RoomStay roomStay : roomStays) {
             result.add(
-                    bookingMapper.toRoomStayDetails(roomStays.get(i), calculateTotalStayCost(roomStays.get(i)))
+                    bookingMapper.toRoomStayDetails(roomStay, calculateTotalStayCost(roomStay))
             );
         }
         return result;
+    }
+
+    private void validateInternalConflicts(List<SingleRoomStayRequest> requests) {
+        List<InternalRoomStayConflict> conflicts = new ArrayList<>();
+
+        List<SingleRoomStayRequest> requestsCopy = new ArrayList<>(requests);
+        requestsCopy.sort(Comparator
+                .comparing(SingleRoomStayRequest::roomId)
+                .thenComparing(SingleRoomStayRequest::from)
+        );
+
+        for (int i = 0; i < requestsCopy.size() - 1; i++) {
+            for(int j = i+1; j<requestsCopy.size(); j++){
+                if (!Objects.equals(requestsCopy.get(i).roomId(), requestsCopy.get(j).roomId())) break;
+
+                if (doStaysOverLap(requestsCopy.get(i), requestsCopy.get(j)) && Objects.equals(requestsCopy.get(i).roomId(), requestsCopy.get(j).roomId())) {
+                    conflicts.add(new InternalRoomStayConflict(
+                            requestsCopy.get(i).roomId(),
+                            requestsCopy.get(i).from(),
+                            requestsCopy.get(i).to(),
+                            requestsCopy.get(j).from(),
+                            requestsCopy.get(j).to()
+                    ));
+                }
+            }
+        }
+        if (!conflicts.isEmpty()) throw new BookingRequestConflictException(conflicts);
+    }
+
+    private boolean doStaysOverLap(SingleRoomStayRequest request1, SingleRoomStayRequest request2) {
+        return request1.to().isAfter(request2.from()) && request1.from().isBefore(request2.to());
     }
 }

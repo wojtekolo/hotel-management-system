@@ -1,6 +1,7 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
 import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
+import io.github.wojtekolo.hotelsystem.common.exceptions.BookingRequestConflictException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.*;
@@ -462,6 +463,69 @@ class BookingServiceTest {
                             .containsExactlyInAnyOrder(15L, 16L, 17L);
                 });
 
+
+    }
+
+    @Test
+    public void should_throw_booking_request_conflict_when_there_is_overlap_between_sequential_stays(){
+        setUpEmployee();
+        setUpCustomer();
+
+        LocalDate today = LocalDate.now();
+
+        var stay1 = createSingleRoomStayRequest(1L, today.plusDays(10), today.plusDays(15));
+        var stay2 = createSingleRoomStayRequest(1L, today.plusDays(13), today.plusDays(18));
+        var stay3 = createSingleRoomStayRequest(1L, today.plusDays(17), today.plusDays(20));
+
+        var booking = createBookingRequest(List.of(stay1, stay2, stay3));
+
+//        when
+        assertThatThrownBy(()->bookingService.addBooking(booking))
+                .isInstanceOf(BookingRequestConflictException.class)
+                .satisfies(e ->{
+                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+
+                    assertThat(bookingEx.getConflicts())
+                            .hasSize(2)
+                            .extracting(InternalRoomStayConflict::from1)
+                            .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(13));
+
+                    assertThat(bookingEx.getConflicts())
+                            .extracting(InternalRoomStayConflict::to2)
+                            .containsExactlyInAnyOrder(today.plusDays(18), today.plusDays(20));
+                });
+
+    }
+
+    @Test
+    public void should_throw_booking_request_conflict_when_one_stay_overlaps_multiple_others(){
+        setUpEmployee();
+        setUpCustomer();
+
+        LocalDate today = LocalDate.now();
+
+        var stay1 = createSingleRoomStayRequest(1L, today.plusDays(10), today.plusDays(30));
+        var stay2 = createSingleRoomStayRequest(1L, today.plusDays(13), today.plusDays(15));
+        var stay3 = createSingleRoomStayRequest(1L, today.plusDays(16), today.plusDays(20));
+        var stay4 = createSingleRoomStayRequest(1L, today.plusDays(22), today.plusDays(25));
+
+        var booking = createBookingRequest(List.of(stay1, stay2, stay3, stay4));
+
+//        when
+        assertThatThrownBy(()->bookingService.addBooking(booking))
+                .isInstanceOf(BookingRequestConflictException.class)
+                .satisfies(e ->{
+                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+
+                    assertThat(bookingEx.getConflicts())
+                            .hasSize(3)
+                            .extracting(InternalRoomStayConflict::from1)
+                            .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(10), today.plusDays(10));
+
+                    assertThat(bookingEx.getConflicts())
+                            .extracting(InternalRoomStayConflict::to2)
+                            .containsExactlyInAnyOrder(today.plusDays(15), today.plusDays(20), today.plusDays(25));
+                });
 
     }
 
