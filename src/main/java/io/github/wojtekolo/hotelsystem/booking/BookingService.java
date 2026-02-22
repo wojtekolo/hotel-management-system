@@ -57,7 +57,7 @@ public class BookingService {
         for (RoomStayUpdateRequest request : newStays) {
             RoomStay updatedRoomStay = RoomStay.createPlanned(newBooking,
                     findRoom(request.roomId()),
-                    currentBooking.getCustomer(),
+                    currentBooking.getCustomer().getLoyaltyStatus().getDiscount(),
                     currentBooking.getCreateBy(),
                     request.from(),
                     request.to(),
@@ -87,7 +87,8 @@ public class BookingService {
                 allConflicts.add(new RoomStayConflict(room.getId(), room.getName(), details));
             }
 
-            booking.addStay(RoomStay.createPlanned(booking, room, customer, employee, stayRequest.from(), stayRequest.to(), stayRequest.customPricePerNight()));
+            booking.addStay(RoomStay.createPlanned(booking, room, customer.getLoyaltyStatus().getDiscount(),
+                    employee, stayRequest.from(), stayRequest.to(), stayRequest.customPricePerNight()));
         }
         if (!allConflicts.isEmpty()) throw new BookingConflictException(allConflicts);
     }
@@ -119,6 +120,6 @@ public class BookingService {
 
     private Booking findBooking(Long id) {
         return bookingRepository.findById(id)
-                                .orElseThrow(() -> new ResourceNotFoundException("Booking with bookingId " + id + " not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Booking with ID " + id + " not found"));
     }
 }

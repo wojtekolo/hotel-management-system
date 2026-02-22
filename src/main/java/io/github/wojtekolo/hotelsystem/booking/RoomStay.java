@@ -90,11 +90,11 @@ public class RoomStay {
         return pricePerNight.multiply(BigDecimal.valueOf(days));
     }
 
-    public static RoomStay createPlanned(Booking booking, Room room, Customer customer, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
+    public static RoomStay createPlanned(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
         return RoomStay.builder()
                        .booking(booking)
                        .room(room)
-                       .pricePerNight(calculatePricePerNight(room, customer, customPricePerNight))
+                       .pricePerNight(calculatePricePerNight(room, discount, customPricePerNight))
                        .activeFrom(from)
                        .activeTo(to)
                        .status(RoomStayStatus.PLANNED)
@@ -102,10 +102,10 @@ public class RoomStay {
                        .build();
     }
 
-    private static BigDecimal calculatePricePerNight(Room room, Customer customer, BigDecimal customPricePerNight) {
+    private static BigDecimal calculatePricePerNight(Room room, BigDecimal discount, BigDecimal customPricePerNight) {
         if (customPricePerNight == null) {
             return room.getType().getPricePerNight()
-                       .multiply(BigDecimal.ONE.subtract(customer.getLoyaltyStatus().getDiscount()));
+                       .multiply(BigDecimal.ONE.subtract(discount));
         } else {
             return customPricePerNight;
         }
