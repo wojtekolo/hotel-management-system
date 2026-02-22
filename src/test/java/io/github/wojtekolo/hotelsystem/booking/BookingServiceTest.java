@@ -1,8 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingRequestConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
+import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.*;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
@@ -13,6 +11,8 @@ import io.github.wojtekolo.hotelsystem.room.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -444,6 +444,126 @@ class BookingServiceTest {
 
     }
 
+//    -------------UPDATE TESTS-------------
+
+    @Test
+    public void should_update_single_stay() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        mockBooking();
+
+        Room room = mockRoom(2L, "roomname2");
+
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(20)));
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+                createRoomStayUpdateRequest(1L, 2L, today.plusDays(12), today.plusDays(15))
+        ));
+
+//        when
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+
+//        then
+        assertThat(details.stays().getFirst().roomId()).isEqualTo(2L);
+        assertThat(details.stays().getFirst().roomName()).isEqualTo("roomname2");
+        assertThat(details.stays().getFirst().activeFrom()).isEqualTo(today.plusDays(12));
+        assertThat(details.stays().getFirst().activeTo()).isEqualTo(today.plusDays(15));
+    }
+
+    @Test
+    public void should_update_multiple_stays_for_the_same_room() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        mockBooking();
+
+        Room room = mockRoom(1L);
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(15)));
+        booking.addStay(buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20)));
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+                createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16)),
+                createRoomStayUpdateRequest(2L, 1L, today.plusDays(16), today.plusDays(21))
+        ));
+
+//        when
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+
+//        then
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::activeFrom)
+                .containsExactlyInAnyOrder(today.plusDays(11), today.plusDays(16));
+
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::activeTo)
+                .containsExactlyInAnyOrder(today.plusDays(21),today.plusDays(16));
+    }
+
+    @Test
+    public void should_change_status_to_cancelled_when_deleting_stay() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        mockBooking();
+
+        Room room = mockRoom(1L);
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(15)));
+        RoomStay stayToBeRemoved = buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20));
+        booking.addStay(stayToBeRemoved);
+
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+                createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16))
+        ));
+
+//        when
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+
+//        then
+        assertThat(details.stays()).hasSize(2);
+        assertThat(stayToBeRemoved.getStatus()).isEqualTo(RoomStayStatus.CANCELLED);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = RoomStayStatus.class, names = {"ACTIVE", "COMPLETED", "NOSHOW"})
+    public void should_fail_when_removing_stay_in_illegal_status(RoomStayStatus illegalStatus) {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        Room room = RoomTestUtils.aValidRoom().build();
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+
+        RoomStay stayToBeRemoved1 = buildStay(2L, room, employee, today.plusDays(10), today.plusDays(12));
+        stayToBeRemoved1.setStatus(illegalStatus);
+        booking.addStay(stayToBeRemoved1);
+
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, List.of());
+
+//        when and then
+        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+                .isInstanceOf(RoomStayStatusException.class)
+                .satisfies(ex ->{
+                    RoomStayStatusException roomStayEx = (RoomStayStatusException) ex;
+                    assertThat(roomStayEx.getDetails())
+                            .extracting(RoomStayBadStatusDetails::id)
+                            .containsExactlyInAnyOrder(2L);
+                });
+    }
+
 
     private Map<Long, BigDecimal> mapStaysPrices(List<RoomStayDetails> stays) {
         Map<Long, BigDecimal> roomsPricePerNight = new HashMap<>();
@@ -572,7 +692,7 @@ class BookingServiceTest {
         );
     }
 
-    private RoomStayUpdateRequest createRoomStayUpdateRequestWithPricef(Long id, Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
+    private RoomStayUpdateRequest createRoomStayUpdateRequestWithPrice(Long id, Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
         return new RoomStayUpdateRequest(
                 id,
                 roomId,
@@ -589,5 +709,9 @@ class BookingServiceTest {
                 from,
                 to
         )).thenReturn(List.of(conflicts));
+    }
+
+    private RoomStay buildStay(Long id, Room room, Employee employee, LocalDate from, LocalDate to){
+        return BookingTestUtils.aValidRoomStay(null, room,employee).id(id).activeFrom(from).activeTo(to).build();
     }
 }

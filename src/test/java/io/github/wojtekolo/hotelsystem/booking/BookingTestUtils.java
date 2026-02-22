@@ -30,8 +30,8 @@ public class BookingTestUtils {
                 .status(RoomStayStatus.PLANNED);
     }
 
-    public static SingleRoomStayRequest.SingleRoomStayRequestBuilder aValidRoomStayRequest(Long roomId, LocalDate today){
-        return SingleRoomStayRequest.builder()
+    public static RoomStayCreateRequest.RoomStayCreateRequestBuilder aValidRoomStayRequest(Long roomId, LocalDate today){
+        return RoomStayCreateRequest.builder()
                 .roomId(roomId)
                 .from(today.plusDays(1))
                 .to(today.plusDays(10))

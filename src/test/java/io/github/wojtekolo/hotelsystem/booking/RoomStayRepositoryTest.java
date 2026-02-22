@@ -107,7 +107,7 @@ class RoomStayRepositoryTest {
         RoomType roomType = RoomTestUtils.aValidType().build();
         entityManager.persist(roomType);
 
-        Room room = RoomTestUtils.aValidRoom(roomType)
+        Room room = RoomTestUtils.aValidRoomWithType(roomType)
                 .build();
         entityManager.persist(room);
 
@@ -120,10 +120,10 @@ class RoomStayRepositoryTest {
         LoyaltyStatus loyaltyStatus = CustomerTestUtils.aValidLoyaltyStatus().build();
         entityManager.persist(loyaltyStatus);
 
-        Customer customer = CustomerTestUtils.aValidCustomer(customerPerson, loyaltyStatus).build();
+        Customer customer = CustomerTestUtils.aValidCustomerWithPersonWithLoyalty(customerPerson, loyaltyStatus).build();
         entityManager.persist(customer);
 
-        Employee employee = EmployeeTestUtils.aValidEmployee(employeePerson).build();
+        Employee employee = EmployeeTestUtils.aValidEmployeeWithPerson(employeePerson).build();
         entityManager.persist(employee);
         return new BookingTestContext(customer, employee, room);
     }

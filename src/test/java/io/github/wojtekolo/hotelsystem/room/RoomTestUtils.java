@@ -7,12 +7,21 @@ import java.math.BigDecimal;
 
 public class RoomTestUtils {
     private static int counter = 100;
-    public static Room.RoomBuilder aValidRoom(RoomType type) {
+    public static Room.RoomBuilder aValidRoomWithType(RoomType type) {
         return Room.builder()
                 .name(String.valueOf(counter++))
                 .floor(0)
                 .description("Room description")
                 .type(type)
+                .lifecycleStatus(LifecycleStatus.ACTIVE)
+                .operationalStatus(OperationalStatus.CLEAN);
+    }
+    public static Room.RoomBuilder aValidRoom() {
+        return Room.builder()
+                .name(String.valueOf(counter++))
+                .floor(0)
+                .description("Room description")
+                .type(aValidType().build())
                 .lifecycleStatus(LifecycleStatus.ACTIVE)
                 .operationalStatus(OperationalStatus.CLEAN);
     }
