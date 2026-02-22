@@ -5,7 +5,9 @@ import io.github.wojtekolo.hotelsystem.employee.Employee;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -49,5 +51,23 @@ public class Booking {
     public void addStay(RoomStay stay) {
         this.stays.add(stay);
         stay.setBooking(this);
+    }
+
+    public BigDecimal calculateTotalCost() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (RoomStay roomStay : stays) {
+            total = total.add(roomStay.calculateTotalCost());
+        }
+        return total;
+    }
+
+    public static Booking createDefault(Customer customer, Employee employee) {
+        return Booking.builder()
+                      .customer(customer)
+                      .createBy(employee)
+                      .paymentStatus(PaymentStatus.UNPAID)
+                      .status(BookingStatus.PLANNED)
+                      .stays(new ArrayList<>())
+                      .build();
     }
 }

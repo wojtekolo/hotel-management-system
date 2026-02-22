@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
+import io.github.wojtekolo.hotelsystem.customer.Customer;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
 import io.github.wojtekolo.hotelsystem.guest.Guest;
 import io.github.wojtekolo.hotelsystem.room.Room;
@@ -9,6 +10,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Entity
@@ -81,5 +83,31 @@ public class RoomStay {
     @PreUpdate
     private void setUpdateTime(){
         this.lastUpdateTime = LocalDateTime.now();
+    }
+
+    public BigDecimal calculateTotalCost() {
+        long days = ChronoUnit.DAYS.between(activeFrom, activeTo);
+        return pricePerNight.multiply(BigDecimal.valueOf(days));
+    }
+
+    public static RoomStay createPlanned(Booking booking, Room room, Customer customer, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
+        return RoomStay.builder()
+                       .booking(booking)
+                       .room(room)
+                       .pricePerNight(calculatePricePerNight(room, customer, customPricePerNight))
+                       .activeFrom(from)
+                       .activeTo(to)
+                       .status(RoomStayStatus.PLANNED)
+                       .createBy(employee)
+                       .build();
+    }
+
+    private static BigDecimal calculatePricePerNight(Room room, Customer customer, BigDecimal customPricePerNight) {
+        if (customPricePerNight == null) {
+            return room.getType().getPricePerNight()
+                       .multiply(BigDecimal.ONE.subtract(customer.getLoyaltyStatus().getDiscount()));
+        } else {
+            return customPricePerNight;
+        }
     }
 }
