@@ -50,6 +50,6 @@ public class Employee {
     @Column(nullable = false)
     private LocalDate hireDate;
 
-    @Column(nullable = false)
+    @Column()
     private LocalDate dismissalDate;
 }

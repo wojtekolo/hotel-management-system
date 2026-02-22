@@ -28,7 +28,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "create_employee_id", nullable = false)
-    private Employee createdBy;
+    private Employee createBy;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,6 +43,11 @@ public class Booking {
         createTime = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "booking")
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<RoomStay> stays;
+
+    public void addStay(RoomStay stay) {
+        this.stays.add(stay);
+        stay.setBooking(this);
+    }
 }

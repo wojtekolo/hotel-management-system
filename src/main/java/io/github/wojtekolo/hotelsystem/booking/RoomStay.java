@@ -62,15 +62,15 @@ public class RoomStay {
 
     @ManyToOne
     @JoinColumn(name = "create_employee_id", nullable = false)
-    private Employee createdBy;
+    private Employee createBy;
 
     @ManyToOne
     @JoinColumn(name = "check_in_employee_id")
-    private Employee checkedInBy;
+    private Employee checkInBy;
 
     @ManyToOne
     @JoinColumn(name = "check_out_employee_id")
-    private Employee checkedOutBy;
+    private Employee checkOutBy;
 
     @PrePersist
     private void setCreateTime(){

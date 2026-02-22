@@ -15,10 +15,10 @@ public class CustomerTestUtils {
                 .privatePhone("123456789");
     }
 
+
     public static LoyaltyStatus.LoyaltyStatusBuilder aValidLoyaltyStatus(){
         return LoyaltyStatus.builder()
-                .name("testLoyaltyName")
-                .discount(BigDecimal.valueOf(0.1));
+                .discount(BigDecimal.ZERO)
+                .name(LoyaltyStatusName.BASIC);
     }
-
 }
