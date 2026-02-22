@@ -54,6 +54,8 @@ class BookingServiceTest {
     @Mock
     RoomStayRepository roomStayRepository;
 
+    BookingValidator bookingValidator = new BookingValidator();
+
     @InjectMocks
     BookingService bookingService;
 
@@ -73,7 +75,8 @@ class BookingServiceTest {
                 roomRepository,
                 customerRepository,
                 roomStayRepository,
-                bookingRepository
+                bookingRepository,
+                bookingValidator
         );
     }
 
