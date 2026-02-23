@@ -165,6 +165,11 @@ public class RoomStay {
         }
         return false;
     }
+
+    public static RoomStay createPlanned(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
+        return create(booking, room, discount, employee, from, to, customPricePerNight, RoomStayStatus.PLANNED);
+    }
+
     private static BigDecimal calculatePricePerNight(Room room, BigDecimal discount, BigDecimal customPricePerNight) {
         if (customPricePerNight == null) {
             return room.getType().getPricePerNight()

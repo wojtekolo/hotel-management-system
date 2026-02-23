@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,12 @@ public class BookingService {
         Booking booking = Booking.createDefault(customer, employee);
 
         addStays(booking, request.stays(), customer, employee);
-        bookingValidator.validateInternalConflicts(booking.getStays());
+        List<InternalRoomStayConflict> internalConflicts = bookingValidator.validateInternalConflicts(booking.getStays());
+        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays());
+
+        if (!internalConflicts.isEmpty() || !externalConflicts.isEmpty())
+            throw new BookingValidationException("Error updating booking", externalConflicts, internalConflicts, null);
+
         booking = bookingRepository.save(booking);
 
         return bookingMapper.toBookingDetails(booking, booking.calculateTotalCost(), toRoomStayDetailsList(booking.getStays()));
@@ -39,39 +45,112 @@ public class BookingService {
 
     @Transactional
     public BookingDetails updateBooking(BookingUpdateRequest request) {
-        Booking currentBooking = findBooking(request.bookingId());
-        if (currentBooking.getStatus() == BookingStatus.CANCELLED)
-            throw new BookingStatusException("Cannot edit cancelled booking", BookingErrorCode.BOOKING_CANCELLED_CANNOT_BE_EDITED, currentBooking.getId());
-        Booking updatedBooking = Booking.createDefault(currentBooking.getCustomer(), currentBooking.getCreateBy());
-        updatedBooking.setId(currentBooking.getId());
+        Employee employee = findEmployee(request.employeeId());
 
-        updateRoomStays(currentBooking, updatedBooking, currentBooking.getStays(), request.stays());
+        Booking booking = findBooking(request.bookingId());
+        if (booking.getStatus() == BookingStatus.CANCELLED)
+            throw new BookingStatusException("Cannot edit cancelled booking", BookingErrorCode.BOOKING_CANCELLED_CANNOT_BE_EDITED, booking.getId());
 
-        Booking booking = bookingRepository.save(updatedBooking);
+
+        updateRoomStays(booking, request.stays(), employee);
+
+
+        booking = bookingRepository.save(booking);
         return bookingMapper.toBookingDetails(booking, booking.calculateTotalCost(), toRoomStayDetailsList(booking.getStays()));
     }
 
-    private void updateRoomStays(Booking currentBooking, Booking newBooking, List<RoomStay> currentStays, List<RoomStayUpdateRequest> newStays) {
-        bookingValidator.validateUpdatedRoomStays(newBooking, currentStays, newStays);
+    private void updateRoomStays(Booking booking, List<RoomStayUpdateRequest> newStays, Employee employee) {
+        List<RoomStayBadStatusDetails> badStatusDetails = new ArrayList<>();
+        badStatusDetails.addAll(deleteStays(booking, newStays));
+        badStatusDetails.addAll(updateCurrentStays(booking, newStays));
+        badStatusDetails.addAll(addNewStays(booking, newStays, employee));
 
-        for (RoomStayUpdateRequest request : newStays) {
-            RoomStay updatedRoomStay = RoomStay.createPlanned(newBooking,
-                    findRoom(request.roomId()),
-                    currentBooking.getCustomer().getLoyaltyStatus().getDiscount(),
-                    currentBooking.getCreateBy(),
-                    request.from(),
-                    request.to(),
-                    request.pricePerNight());
+        List<InternalRoomStayConflict> internalConflicts = bookingValidator.validateInternalConflicts(booking.getStays());
+        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays());
 
-            updatedRoomStay.setId(request.id());
-            newBooking.addStay(updatedRoomStay);
-
-            if (request.id() != null) updatedRoomStay.setId(request.id());
+        if (!badStatusDetails.isEmpty() || !internalConflicts.isEmpty() || !externalConflicts.isEmpty()) {
+            throw new BookingValidationException("Error updating booking", externalConflicts, internalConflicts, badStatusDetails);
         }
     }
 
+    private List<RoomStayBadStatusDetails> deleteStays(Booking booking, List<RoomStayUpdateRequest> newStays) {
+        List<Long> requestedIds = newStays.stream().map(RoomStayUpdateRequest::id).filter(Objects::nonNull).toList();
+        List<RoomStayBadStatusDetails> badStatusDetails = new ArrayList<>();
+
+        booking.getStays().stream()
+               .filter(stay -> !requestedIds.contains(stay.getId()))
+               .forEach(roomStay -> {
+                   if (!roomStay.tryCancel())
+                       badStatusDetails.add(new RoomStayBadStatusDetails(
+                               roomStay.getId(), roomStay.getStatus(),
+                               RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_BE_CANCELLED)
+                       );
+               });
+        return badStatusDetails;
+    }
+
+    private List<RoomStayBadStatusDetails> updateCurrentStays(Booking booking, List<RoomStayUpdateRequest> newStays) {
+        Map<Long, RoomStay> currentStaysMap = booking.getStays().stream()
+                                                     .collect(Collectors.toMap(RoomStay::getId, s -> s));
+        List<RoomStayBadStatusDetails> badStatusDetails = new ArrayList<>();
+
+        for (RoomStayUpdateRequest request : newStays) {
+            if (request.id() == null) continue;
+            RoomStay roomStay = currentStaysMap.get(request.id());
+
+            try {
+                Room newRoom = roomRepository.findById(request.roomId()).orElseThrow(NoSuchElementException::new);
+                if (!roomStay.tryUpdateRoom(newRoom)) {
+                    badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                            RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_ROOM_EDITED));
+                }
+            } catch (NoSuchElementException e) {
+                badStatusDetails.add(new RoomStayBadStatusDetails(
+                        roomStay.getId(), roomStay.getStatus(), RoomStayErrorCode.ROOM_NOT_FOUND));
+//              If room doesn't exist don't apply other changes
+                continue;
+            }
+
+            if (!roomStay.tryUpdateActiveFrom(request.from())) {
+                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                        RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED));
+            }
+            if (!roomStay.tryUpdateActiveTo(request.to())) {
+                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                        RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED));
+            }
+            if (!roomStay.tryEditPrice(request.pricePerNight())) {
+                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                        RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED));
+            }
+        }
+        return badStatusDetails;
+    }
+
+    private List<RoomStayBadStatusDetails> addNewStays(Booking booking, List<RoomStayUpdateRequest> newStays, Employee employee) {
+        List<Long> oldIds = booking.getStays().stream().map(RoomStay::getId).toList();
+        List<RoomStayBadStatusDetails> badStatusDetails = new ArrayList<>();
+
+//        For each ID in newStays which does not exist in currentStays, create new planned Stay
+        newStays.stream()
+                .filter(newStayRequest -> !oldIds.contains(newStayRequest.id()))
+                .forEach(newStayRequest -> {
+                            booking.addStay(RoomStay.createPlanned(
+                                    booking,
+                                    findRoom(newStayRequest.roomId()),
+                                    booking.getCustomer().getLoyaltyStatus().getDiscount(),
+                                    employee,
+                                    newStayRequest.from(),
+                                    newStayRequest.to(),
+                                    newStayRequest.pricePerNight()
+                            ));
+                        }
+                );
+        return badStatusDetails;
+    }
+
     private void addStays(Booking booking, List<RoomStayCreateRequest> stayRequests, Customer customer, Employee employee) {
-        List<RoomStayConflict> allConflicts = new ArrayList<>();
+        List<ExternalRoomStayConflict> allConflicts = new ArrayList<>();
         for (RoomStayCreateRequest stayRequest : stayRequests) {
 
             Room room = findRoom(stayRequest.roomId());
@@ -84,7 +163,7 @@ public class BookingService {
                 for (RoomStay conflict : conflicts) {
                     details.add(bookingMapper.toRoomStayConflictDetails(conflict));
                 }
-                allConflicts.add(new RoomStayConflict(room.getId(), room.getName(), details));
+                allConflicts.add(new ExternalRoomStayConflict(room.getId(), room.getName(), details));
             }
 
             booking.addStay(RoomStay.createPlanned(booking, room, customer.getLoyaltyStatus().getDiscount(),

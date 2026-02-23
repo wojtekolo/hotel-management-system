@@ -4,6 +4,6 @@ import java.util.List;
 
 public record BookingConflictResponse(
         String message,
-        List<RoomStayConflict> conflictingRooms
+        List<ExternalRoomStayConflict> conflictingRooms
 ) {
 }

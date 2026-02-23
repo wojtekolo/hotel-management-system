@@ -54,7 +54,7 @@ class BookingServiceTest {
     @Mock
     RoomStayRepository roomStayRepository;
 
-    BookingValidator bookingValidator = new BookingValidator();
+    BookingValidator bookingValidator;
 
     @InjectMocks
     BookingService bookingService;
@@ -68,7 +68,7 @@ class BookingServiceTest {
     @BeforeEach
     void setUp() {
         BookingMapper bookingMapper = new BookingMapperImpl(customerMapper, employeeMapper);
-
+        bookingValidator = new BookingValidator(roomStayRepository, bookingMapper);
         bookingService = new BookingService(
                 bookingMapper,
                 employeeRepository,
@@ -312,11 +312,11 @@ class BookingServiceTest {
                     BookingConflictException bookingEx = (BookingConflictException) ex;
 
                     assertThat(bookingEx.getConflicts())
-                            .extracting(RoomStayConflict::roomName)
+                            .extracting(ExternalRoomStayConflict::roomName)
                             .contains("roomname");
 
                     assertThat(bookingEx.getConflicts())
-                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
+                            .flatExtracting(ExternalRoomStayConflict::roomConflictsDetails)
                             .extracting(RoomStayConflictDetails::roomStayId)
                             .contains(15L);
                 });
@@ -371,12 +371,12 @@ class BookingServiceTest {
 
                     assertThat(bookingEx.getConflicts())
                             .hasSize(2)
-                            .extracting(RoomStayConflict::roomName)
+                            .extracting(ExternalRoomStayConflict::roomName)
                             .containsExactlyInAnyOrder("roomname1", "roomname2")
                             .doesNotContain("roomname3");
 
                     assertThat(bookingEx.getConflicts())
-                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
+                            .flatExtracting(ExternalRoomStayConflict::roomConflictsDetails)
                             .extracting(RoomStayConflictDetails::roomStayId)
                             .containsExactlyInAnyOrder(15L, 16L, 17L);
                 });
@@ -385,7 +385,7 @@ class BookingServiceTest {
     }
 
     @Test
-    public void should_throw_booking_request_conflict_when_there_is_overlap_between_sequential_stays() {
+    public void should_throw_booking_validation_exception_when_there_is_overlap_between_sequential_stays() {
 //        given
         mockEmployee();
         mockCustomer();
@@ -399,16 +399,16 @@ class BookingServiceTest {
 
 //        when and then
         assertThatThrownBy(() -> bookingService.addBooking(booking))
-                .isInstanceOf(BookingRequestConflictException.class)
+                .isInstanceOf(BookingValidationException.class)
                 .satisfies(e -> {
-                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+                    BookingValidationException bookingEx = (BookingValidationException) e;
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getInternalConflicts())
                             .hasSize(2)
                             .extracting(InternalRoomStayConflict::from1)
                             .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(13));
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getInternalConflicts())
                             .extracting(InternalRoomStayConflict::to2)
                             .containsExactlyInAnyOrder(today.plusDays(18), today.plusDays(20));
                 });
@@ -416,7 +416,7 @@ class BookingServiceTest {
     }
 
     @Test
-    public void should_throw_booking_request_conflict_when_one_stay_overlaps_multiple_others() {
+    public void should_throw_booking_validation_exception_when_one_stay_overlaps_multiple_others() {
 //        given
         mockEmployee();
         mockCustomer();
@@ -431,16 +431,16 @@ class BookingServiceTest {
 
 //        when and then
         assertThatThrownBy(() -> bookingService.addBooking(request))
-                .isInstanceOf(BookingRequestConflictException.class)
+                .isInstanceOf(BookingValidationException.class)
                 .satisfies(e -> {
-                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+                    BookingValidationException bookingEx = (BookingValidationException) e;
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getInternalConflicts())
                             .hasSize(3)
                             .extracting(InternalRoomStayConflict::from1)
                             .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(10), today.plusDays(10));
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getInternalConflicts())
                             .extracting(InternalRoomStayConflict::to2)
                             .containsExactlyInAnyOrder(today.plusDays(15), today.plusDays(20), today.plusDays(25));
                 });
@@ -453,7 +453,7 @@ class BookingServiceTest {
     public void should_update_single_stay() {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
-        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        Employee employee = mockEmployee();
         mockBooking();
 
         Room room = mockRoom(2L, "roomname2");
@@ -463,7 +463,7 @@ class BookingServiceTest {
         booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(20)));
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 2L, today.plusDays(12), today.plusDays(15))
         ));
 
@@ -481,19 +481,19 @@ class BookingServiceTest {
     public void should_update_multiple_stays_for_the_same_room() {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
-        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        Employee employee = mockEmployee();
         mockBooking();
 
         Room room = mockRoom(1L);
 
         Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
         booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(15)));
-        booking.addStay(buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20)));
+        booking.addStay(buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20))); //asdas
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16)),
-                createRoomStayUpdateRequest(2L, 1L, today.plusDays(16), today.plusDays(21))
+                createRoomStayUpdateRequest(2L, 1L, today.plusDays(16), today.plusDays(21)) //asdas
         ));
 
 //        when
@@ -513,7 +513,7 @@ class BookingServiceTest {
     public void should_change_status_to_cancelled_when_deleting_stay() {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
-        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        Employee employee = mockEmployee();
         mockBooking();
 
         Room room = mockRoom(1L);
@@ -526,7 +526,7 @@ class BookingServiceTest {
 
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, List.of(
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16))
         ));
 
@@ -543,7 +543,7 @@ class BookingServiceTest {
     public void should_fail_when_removing_stay_in_illegal_status(RoomStayStatus illegalStatus) {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
-        Employee employee = EmployeeTestUtils.aValidEmployee().build();
+        Employee employee = mockEmployee();
         Room room = RoomTestUtils.aValidRoom().build();
 
         Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
@@ -554,16 +554,74 @@ class BookingServiceTest {
 
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, List.of());
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of());
 
 //        when and then
         assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
-                .isInstanceOf(RoomStayStatusException.class)
+                .isInstanceOf(BookingValidationException.class)
                 .satisfies(ex ->{
-                    RoomStayStatusException roomStayEx = (RoomStayStatusException) ex;
-                    assertThat(roomStayEx.getDetails())
-                            .extracting(RoomStayBadStatusDetails::id)
-                            .containsExactlyInAnyOrder(2L);
+                    BookingValidationException roomStayEx = (BookingValidationException) ex;
+                    assertThat(roomStayEx.getBadStatusDetails())
+                            .extracting(RoomStayBadStatusDetails::id, RoomStayBadStatusDetails::status, RoomStayBadStatusDetails::errorCode)
+                            .containsExactlyInAnyOrder(tuple(2L, illegalStatus, RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_BE_CANCELLED));
+                });
+    }
+
+    @Test
+    public void should_change_active_stay_end_date() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        mockBooking();
+
+        Room room = mockRoom(2L);
+
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(5L, room, employee, today.plusDays(10), today.plusDays(20)));
+        booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(5L, 2L, today.plusDays(10), today.plusDays(22))
+        ));
+
+//        when
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+
+//        then
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::id, RoomStayDetails::status, RoomStayDetails::activeTo)
+                .containsExactlyInAnyOrder(tuple(5L, RoomStayStatus.ACTIVE, today.plusDays(22)));
+    }
+
+    @Test
+    public void should_not_change_active_stay_start_date() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+
+        Room room = mockRoom(2L);
+
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(5L, room, employee, today.plusDays(10), today.plusDays(20)));
+        booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(5L, 2L, today.plusDays(12), today.plusDays(20))
+        ));
+
+//        when and then
+        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+                .isInstanceOf(BookingValidationException.class)
+                .satisfies(ex ->{
+                    BookingValidationException bookingEx = (BookingValidationException) ex;
+                    assertThat(bookingEx.getBadStatusDetails())
+                            .extracting(RoomStayBadStatusDetails::id, RoomStayBadStatusDetails::status, RoomStayBadStatusDetails::errorCode)
+                            .containsExactlyInAnyOrder(tuple(5L, RoomStayStatus.ACTIVE, RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED));
+
                 });
     }
 
@@ -588,11 +646,11 @@ class BookingServiceTest {
         return employee;
     }
 
-    private Customer mockCustomer() {
-        return mockCustomer(BigDecimal.valueOf(0.13));
+    private void mockCustomer() {
+        mockCustomer(BigDecimal.valueOf(0.13));
     }
 
-    private Customer mockCustomer(BigDecimal discount) {
+    private void mockCustomer(BigDecimal discount) {
 
         Customer customer = CustomerTestUtils
                 .aValidCustomerWithPersonWithLoyalty(PersonTestUtils.aValidPerson().id(customerId).build(),
@@ -605,7 +663,6 @@ class BookingServiceTest {
 
         when(customerRepository.findById(customerId))
                 .thenReturn(Optional.of(customer));
-        return customer;
     }
 
     private void mockBooking() {
@@ -660,9 +717,10 @@ class BookingServiceTest {
         );
     }
 
-    private BookingUpdateRequest createBookingUpdateRequest(Long bookingId, List<RoomStayUpdateRequest> stayRequests) {
+    private BookingUpdateRequest createBookingUpdateRequest(Long bookingId, Long employeeId, List<RoomStayUpdateRequest> stayRequests) {
         return new BookingUpdateRequest(
                 bookingId,
+                employeeId,
                 stayRequests
         );
     }
