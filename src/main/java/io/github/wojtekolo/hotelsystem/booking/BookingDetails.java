@@ -6,7 +6,7 @@ import java.util.List;
 
 public record BookingDetails(
         Long id,
-        String customerName,
+        String customerFullName,
         String customerPhone,
         String loyaltyDiscount,
         LocalDateTime createTime,

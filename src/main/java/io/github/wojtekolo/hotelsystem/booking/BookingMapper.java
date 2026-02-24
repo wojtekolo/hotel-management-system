@@ -18,7 +18,7 @@ public interface BookingMapper {
 
     @Mapping(target = "totalCost", source = "totalCost")
     @Mapping(target = "stays", source = "stays")
-    @Mapping(target = "customerName", source = "booking.customer")
+    @Mapping(target = "customerFullName", source = "booking.customer")
     @Mapping(target = "customerPhone", source = "booking.customer.privatePhone")
     @Mapping(target = "loyaltyDiscount", source = "booking.customer.loyaltyStatus.discount")
     BookingDetails toBookingDetails(Booking booking, BigDecimal totalCost, List<RoomStayDetails> stays);
