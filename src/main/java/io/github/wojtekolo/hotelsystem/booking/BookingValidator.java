@@ -1,8 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
-import io.github.wojtekolo.hotelsystem.common.exceptions.RoomStayStatusException;
 import io.github.wojtekolo.hotelsystem.room.Room;
-import io.github.wojtekolo.hotelsystem.room.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,20 +16,22 @@ public class BookingValidator {
     private final RoomStayRepository roomStayRepository;
     private final BookingMapper bookingMapper;
 
-    public List<ExternalRoomStayConflict> validateExternalConflicts(List<RoomStay> stays) {
+    public List<ExternalRoomStayConflict> validateExternalConflicts(List<RoomStay> stays, Long bookingId) {
         List<ExternalRoomStayConflict> allConflicts = new ArrayList<>();
         for (RoomStay stay : stays) {
             Room room = stay.getRoom();
 
             List<RoomStay> conflicts = roomStayRepository.getConflicts(room.getId(), List.of(RoomStayStatus.ACTIVE,
-                    RoomStayStatus.PLANNED), stay.getActiveFrom(), stay.getActiveTo());
+                    RoomStayStatus.PLANNED), stay.getActiveFrom(), stay.getActiveTo(), bookingId);
 
             if (!conflicts.isEmpty()) {
                 List<RoomStayConflictDetails> details = new ArrayList<>();
                 for (RoomStay conflict : conflicts) {
                     details.add(bookingMapper.toRoomStayConflictDetails(conflict));
                 }
-                allConflicts.add(new ExternalRoomStayConflict(room.getId(), room.getName(), details));
+                allConflicts.add(new ExternalRoomStayConflict(
+                        room.getId(), room.getName(), stay.getId(), stay.getActiveFrom(), stay.getActiveTo(), details
+                ));
             }
         }
         return allConflicts;

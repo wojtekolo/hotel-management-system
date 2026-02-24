@@ -23,5 +23,5 @@ public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
             AND (?5 IS NULL OR rs.booking.id != ?5)
             """
     )
-    List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo, List<Long> excludedIds);
+    List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo, Long excludedBookingID);
 }

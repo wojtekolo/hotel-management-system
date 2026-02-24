@@ -33,7 +33,7 @@ public class BookingService {
 
         addStays(booking, request.stays(), customer, employee);
         List<InternalRoomStayConflict> internalConflicts = bookingValidator.validateInternalConflicts(booking.getStays());
-        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays());
+        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays(), null);
 
         if (!internalConflicts.isEmpty() || !externalConflicts.isEmpty())
             throw new BookingValidationException("Error updating booking", externalConflicts, internalConflicts, null);
@@ -66,7 +66,7 @@ public class BookingService {
         badStatusDetails.addAll(addNewStays(booking, newStays, employee));
 
         List<InternalRoomStayConflict> internalConflicts = bookingValidator.validateInternalConflicts(booking.getStays());
-        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays());
+        List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays(), booking.getId());
 
         if (!badStatusDetails.isEmpty() || !internalConflicts.isEmpty() || !externalConflicts.isEmpty()) {
             throw new BookingValidationException("Error updating booking", externalConflicts, internalConflicts, badStatusDetails);
@@ -163,7 +163,9 @@ public class BookingService {
                 for (RoomStay conflict : conflicts) {
                     details.add(bookingMapper.toRoomStayConflictDetails(conflict));
                 }
-                allConflicts.add(new ExternalRoomStayConflict(room.getId(), room.getName(), details));
+                allConflicts.add(new ExternalRoomStayConflict(
+                        room.getId(), room.getName(), null, stayRequest.from(), stayRequest.to(), details)
+                );
             }
 
             booking.addStay(RoomStay.createPlanned(booking, room, customer.getLoyaltyStatus().getDiscount(),
