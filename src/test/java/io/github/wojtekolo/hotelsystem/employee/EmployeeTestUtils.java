@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class EmployeeTestUtils {
-    public static Employee.EmployeeBuilder aValidEmployeeWithPerson(Person person){
+    public static Employee.EmployeeBuilder aValidEmployee(Person person){
         return Employee.builder()
                 .person(person)
                 .description("test description")
@@ -21,6 +21,6 @@ public class EmployeeTestUtils {
                 .hireDate(LocalDate.of(2015,10,10));
     }
     public static Employee.EmployeeBuilder aValidEmployee(){
-        return aValidEmployeeWithPerson(PersonTestUtils.aValidPerson().build());
+        return aValidEmployee(PersonTestUtils.aValidPerson().build());
     }
 }

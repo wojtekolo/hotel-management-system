@@ -52,8 +52,8 @@ public class BookingTestUtils {
 
     public static BookingCreateRequest createBookingCreateRequest(Long employeeId, Long customerId, List<RoomStayCreateRequest> stayRequests) {
         return new BookingCreateRequest(
-                employeeId,
                 customerId,
+                employeeId,
                 stayRequests
         );
     }

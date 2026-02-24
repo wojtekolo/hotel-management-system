@@ -6,7 +6,7 @@ import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import java.math.BigDecimal;
 
 public class CustomerTestUtils {
-    public static Customer.CustomerBuilder aValidCustomerWithPersonWithLoyalty(Person person, LoyaltyStatus loyaltyStatus){
+    public static Customer.CustomerBuilder aValidCustomer(Person person, LoyaltyStatus loyaltyStatus){
         return Customer.builder()
                 .person(person)
                 .description("testDescription")
@@ -15,7 +15,7 @@ public class CustomerTestUtils {
                 .privatePhone("123456789");
     }
     public static Customer.CustomerBuilder aValidCustomer(){
-        return aValidCustomerWithPersonWithLoyalty(PersonTestUtils.aValidPerson().build(), aValidLoyaltyStatus().build());
+        return aValidCustomer(PersonTestUtils.aValidPerson().build(), aValidLoyaltyStatus().build());
     }
 
 

@@ -632,7 +632,7 @@ class BookingServiceTest {
 
     private Employee mockEmployee() {
         Employee employee = EmployeeTestUtils
-                .aValidEmployeeWithPerson(PersonTestUtils.aValidPerson().id(employeeId).build())
+                .aValidEmployee(PersonTestUtils.aValidPerson().id(employeeId).build())
                 .id(employeeId)
                 .build();
 
@@ -647,7 +647,7 @@ class BookingServiceTest {
     private void mockCustomer(BigDecimal discount) {
 
         Customer customer = CustomerTestUtils
-                .aValidCustomerWithPersonWithLoyalty(PersonTestUtils.aValidPerson().id(customerId).build(),
+                .aValidCustomer(PersonTestUtils.aValidPerson().id(customerId).build(),
                         CustomerTestUtils
                                 .aValidLoyaltyStatus()
                                 .discount(discount)
@@ -674,7 +674,7 @@ class BookingServiceTest {
     }
 
     private Room mockRoom(Long id) {
-        Room room = RoomTestUtils.aValidRoomWithType(RoomTestUtils.aValidType().build())
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build())
                                  .id(id)
                                  .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
@@ -682,7 +682,7 @@ class BookingServiceTest {
     }
 
     private Room mockRoom(Long id, String name) {
-        Room room = RoomTestUtils.aValidRoomWithType(RoomTestUtils.aValidType().build())
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build())
                                  .id(id)
                                  .name(name)
                                  .build();
@@ -691,7 +691,7 @@ class BookingServiceTest {
     }
 
     private Room mockRoom(Long id, BigDecimal pricePerNight) {
-        Room room = RoomTestUtils.aValidRoomWithType(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
                                  .id(id)
                                  .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
