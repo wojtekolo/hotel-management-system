@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -89,7 +90,7 @@ class BookingServiceTest {
         mockRoom(1L, BigDecimal.valueOf(500));
 
         var request = createBookingCreateRequest(List.of(
-                createRoomStayCreateRequestWithPrice(
+                createRoomStayCreateRequest(
                         1L,
                         today.plusDays(5),
                         today.plusDays(10),
@@ -121,7 +122,7 @@ class BookingServiceTest {
 
         BookingCreateRequest request = createBookingCreateRequest(List.of(
 //                      5 * 500 = 2500
-                        createRoomStayCreateRequestWithPrice(
+                        createRoomStayCreateRequest(
                                 room1.getId(),
                                 today.plusDays(5),
                                 today.plusDays(10),
@@ -129,7 +130,7 @@ class BookingServiceTest {
                         ),
 
 //                      6 * 600 = 3600
-                        createRoomStayCreateRequestWithPrice(
+                        createRoomStayCreateRequest(
                                 room2.getId(),
                                 today.plusDays(5),
                                 today.plusDays(11),
@@ -137,7 +138,7 @@ class BookingServiceTest {
                         ),
 
 //                      7 * 700 = 4900
-                        createRoomStayCreateRequestWithPrice(
+                        createRoomStayCreateRequest(
                                 room3.getId(),
                                 today.plusDays(5),
                                 today.plusDays(12),
@@ -625,7 +626,6 @@ class BookingServiceTest {
                 });
     }
 
-
     private Map<Long, BigDecimal> mapStaysPrices(List<RoomStayDetails> stays) {
         Map<Long, BigDecimal> roomsPricePerNight = new HashMap<>();
 
@@ -634,7 +634,6 @@ class BookingServiceTest {
         }
         return roomsPricePerNight;
     }
-
 
     private Employee mockEmployee() {
         Employee employee = EmployeeTestUtils
@@ -679,11 +678,6 @@ class BookingServiceTest {
                 .thenReturn(Optional.of(booking));
     }
 
-    private void setUpBookingSave(Booking booking) {
-        when(bookingRepository.save(booking))
-                .thenReturn(booking);
-    }
-
     private Room mockRoom(Long id) {
         Room room = RoomTestUtils.aValidRoomWithType(RoomTestUtils.aValidType().build())
                                  .id(id)
@@ -707,60 +701,6 @@ class BookingServiceTest {
                                  .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
         return room;
-    }
-
-    private BookingCreateRequest createBookingCreateRequest(List<RoomStayCreateRequest> stayRequests) {
-        return new BookingCreateRequest(
-                customerId,
-                employeeId,
-                stayRequests
-        );
-    }
-
-    private BookingUpdateRequest createBookingUpdateRequest(Long bookingId, Long employeeId, List<RoomStayUpdateRequest> stayRequests) {
-        return new BookingUpdateRequest(
-                bookingId,
-                employeeId,
-                stayRequests
-        );
-    }
-
-    private RoomStayCreateRequest createRoomStayCreateRequest(Long roomId, LocalDate from, LocalDate to) {
-        return new RoomStayCreateRequest(
-                roomId,
-                from,
-                to,
-                null
-        );
-    }
-
-    private RoomStayUpdateRequest createRoomStayUpdateRequest(Long id, Long roomId, LocalDate from, LocalDate to) {
-        return new RoomStayUpdateRequest(
-                id,
-                roomId,
-                from,
-                to,
-                null
-        );
-    }
-
-    private RoomStayCreateRequest createRoomStayCreateRequestWithPrice(Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
-        return new RoomStayCreateRequest(
-                roomId,
-                from,
-                to,
-                pricePerNight
-        );
-    }
-
-    private RoomStayUpdateRequest createRoomStayUpdateRequestWithPrice(Long id, Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
-        return new RoomStayUpdateRequest(
-                id,
-                roomId,
-                from,
-                to,
-                pricePerNight
-        );
     }
 
     private void mockRoomStayConflicts(Long roomId, LocalDate from, LocalDate to, RoomStay... conflicts) {
