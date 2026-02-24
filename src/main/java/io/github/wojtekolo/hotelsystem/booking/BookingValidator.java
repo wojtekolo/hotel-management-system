@@ -37,6 +37,10 @@ public class BookingValidator {
         return allConflicts;
     }
 
+    public List<ExternalRoomStayConflict> validateExternalConflicts(List<RoomStay> stays) {
+        return validateExternalConflicts(stays, null);
+    }
+
     public List<InternalRoomStayConflict> validateInternalConflicts(List<RoomStay> stays) {
         List<InternalRoomStayConflict> conflicts = new ArrayList<>();
 

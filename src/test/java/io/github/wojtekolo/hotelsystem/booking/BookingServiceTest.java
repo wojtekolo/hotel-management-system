@@ -305,22 +305,22 @@ class BookingServiceTest {
                 )
         ));
 
-        mockRoomStayConflicts(1L, from, to,
+        mockRoomStayConflicts(null,1L, from, to,
                 RoomStay.builder().id(15L).room(room).activeFrom(from.plusDays(1)).activeTo(to).build());
 
 //        when
         assertThatThrownBy(() ->
                 bookingService.addBooking(request)
         )
-                .isInstanceOf(BookingConflictException.class)
+                .isInstanceOf(BookingValidationException.class)
                 .satisfies(ex -> {
-                    BookingConflictException bookingEx = (BookingConflictException) ex;
+                    BookingValidationException bookingEx = (BookingValidationException) ex;
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getExternalConflicts())
                             .extracting(ExternalRoomStayConflict::roomName)
                             .contains("roomname");
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getExternalConflicts())
                             .flatExtracting(ExternalRoomStayConflict::roomConflictsDetails)
                             .extracting(RoomStayConflictDetails::roomStayId)
                             .contains(15L);
@@ -346,41 +346,31 @@ class BookingServiceTest {
                 createRoomStayCreateRequest(room3.getId(), from, to)
         ));
 
-        mockRoomStayConflicts(1L, from, to,
+        mockRoomStayConflicts(null, 1L, from, to,
                 RoomStay.builder().id(15L).room(room1).activeFrom(from.plusDays(1)).activeTo(to).build()
         );
 
-        mockRoomStayConflicts(room2.getId(), from, to,
+        mockRoomStayConflicts(null, room2.getId(), from, to,
                 RoomStay.builder().id(16L).room(room2).activeFrom(from).activeTo(to.plusDays(1)).build(),
                 RoomStay.builder().id(17L).room(room2).activeFrom(from).activeTo(to).build()
         );
 
-        mockRoomStayConflicts(room3.getId(), from, to);
-
-        when(roomStayRepository.getConflicts(
-                room3.getId(),
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to
-        )).thenReturn(
-                List.of()
-        );
+        mockRoomStayConflicts(null, room3.getId(), from, to);
 
 //        when and then
         assertThatThrownBy(
                 () -> bookingService.addBooking(request))
-                .isInstanceOf(BookingConflictException.class)
-                .isInstanceOf(BookingConflictException.class)
+                .isInstanceOf(BookingValidationException.class)
                 .satisfies(e -> {
-                    BookingConflictException bookingEx = (BookingConflictException) e;
+                    BookingValidationException bookingEx = (BookingValidationException) e;
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getExternalConflicts())
                             .hasSize(2)
                             .extracting(ExternalRoomStayConflict::roomName)
                             .containsExactlyInAnyOrder("roomname1", "roomname2")
                             .doesNotContain("roomname3");
 
-                    assertThat(bookingEx.getConflicts())
+                    assertThat(bookingEx.getExternalConflicts())
                             .flatExtracting(ExternalRoomStayConflict::roomConflictsDetails)
                             .extracting(RoomStayConflictDetails::roomStayId)
                             .containsExactlyInAnyOrder(15L, 16L, 17L);
@@ -698,12 +688,13 @@ class BookingServiceTest {
         return room;
     }
 
-    private void mockRoomStayConflicts(Long roomId, LocalDate from, LocalDate to, RoomStay... conflicts) {
+    private void mockRoomStayConflicts(Long bookingId, Long roomId, LocalDate from, LocalDate to, RoomStay... conflicts) {
         when(roomStayRepository.getConflicts(
                 roomId,
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
-                to
+                to,
+                bookingId
         )).thenReturn(List.of(conflicts));
     }
 
