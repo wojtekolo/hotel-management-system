@@ -153,11 +153,13 @@ class BookingServiceTest {
 
 
 //        then
-        Map<Long, BigDecimal> staysPricePerNight = mapStaysPrices(result.stays());
-
-        assertThat(staysPricePerNight.get(room1.getId())).isEqualByComparingTo(BigDecimal.valueOf(500));
-        assertThat(staysPricePerNight.get(room2.getId())).isEqualByComparingTo(BigDecimal.valueOf(600));
-        assertThat(staysPricePerNight.get(room3.getId())).isEqualByComparingTo(BigDecimal.valueOf(700));
+        assertThat(result.stays())
+                .extracting(RoomStayDetails::roomId, RoomStayDetails::pricePerNight)
+                        .containsExactlyInAnyOrder(
+                                tuple(1L, (BigDecimal.valueOf(500))),
+                                tuple(2L, (BigDecimal.valueOf(600))),
+                                tuple(3L, (BigDecimal.valueOf(700)))
+                        );
 
 //        Don't take discount from loyalty status into account when price per night is custom
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(11000));
@@ -217,11 +219,13 @@ class BookingServiceTest {
         BookingDetails result = bookingService.addBooking(request);
 
 //        then
-        Map<Long, BigDecimal> staysPricePerNight = mapStaysPrices(result.stays());
-
-        assertThat(staysPricePerNight.get(room1.getId())).isEqualByComparingTo(BigDecimal.valueOf(90));
-        assertThat(staysPricePerNight.get(room2.getId())).isEqualByComparingTo(BigDecimal.valueOf(180));
-        assertThat(staysPricePerNight.get(room3.getId())).isEqualByComparingTo(BigDecimal.valueOf(270));
+        assertThat(result.stays())
+                .extracting(RoomStayDetails::roomId, RoomStayDetails::pricePerNight)
+                .containsExactlyInAnyOrder(
+                        tuple(1L, BigDecimal.valueOf(90.0)),
+                        tuple(2L, BigDecimal.valueOf(180.0)),
+                        tuple(3L, BigDecimal.valueOf(270.0))
+                );
 
         assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3420));
     }
@@ -624,15 +628,6 @@ class BookingServiceTest {
                             .containsExactlyInAnyOrder(tuple(5L, RoomStayStatus.ACTIVE, RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED));
 
                 });
-    }
-
-    private Map<Long, BigDecimal> mapStaysPrices(List<RoomStayDetails> stays) {
-        Map<Long, BigDecimal> roomsPricePerNight = new HashMap<>();
-
-        for (RoomStayDetails stay : stays) {
-            roomsPricePerNight.put(stay.roomId(), stay.pricePerNight());
-        }
-        return roomsPricePerNight;
     }
 
     private Employee mockEmployee() {
