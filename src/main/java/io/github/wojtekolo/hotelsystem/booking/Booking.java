@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,7 @@ public class Booking {
     }
 
     public BigDecimal calculateTotalCost() {
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal total = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         for (RoomStay roomStay : stays) {
             total = total.add(roomStay.calculateTotalCost());
         }

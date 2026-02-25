@@ -1,8 +1,11 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
 import io.github.wojtekolo.hotelsystem.customer.Customer;
+import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
+import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
 import io.github.wojtekolo.hotelsystem.room.Room;
+import io.github.wojtekolo.hotelsystem.room.RoomTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,11 +26,31 @@ public class BookingTestUtils {
                 .stays(new ArrayList<>());
     }
 
+    public static Booking.BookingBuilder aValidBooking(){
+        return Booking.builder()
+                .customer(CustomerTestUtils.aValidCustomer().build())
+                .createBy(EmployeeTestUtils.aValidEmployee().build())
+                .status(BookingStatus.PLANNED)
+                .paymentStatus(PaymentStatus.UNPAID)
+                .stays(new ArrayList<>());
+    }
+
     public static RoomStay.RoomStayBuilder aValidRoomStay(Booking booking, Room room, Employee createEmployee){
         return RoomStay.builder()
                 .booking(booking)
                 .room(room)
                 .createBy(createEmployee)
+                .pricePerNight(BigDecimal.valueOf(500))
+                .activeFrom(LocalDate.now().plusDays(10))
+                .activeTo(LocalDate.now().plusDays(15))
+                .status(RoomStayStatus.PLANNED);
+    }
+
+    public static RoomStay.RoomStayBuilder aValidRoomStay(){
+        return RoomStay.builder()
+                .booking(aValidBooking().build())
+                .room(RoomTestUtils.aValidRoom().build())
+                .createBy(EmployeeTestUtils.aValidEmployee().build())
                 .pricePerNight(BigDecimal.valueOf(500))
                 .activeFrom(LocalDate.now().plusDays(10))
                 .activeTo(LocalDate.now().plusDays(15))

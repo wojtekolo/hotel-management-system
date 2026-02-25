@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -105,7 +106,7 @@ public class RoomStay {
         return status == RoomStayStatus.PLANNED || status == RoomStayStatus.ACTIVE;
     }
 
-    public boolean doesCollide(){
+    public boolean doesCollide() {
         return status == RoomStayStatus.PLANNED || status == RoomStayStatus.ACTIVE;
     }
 
@@ -170,12 +171,23 @@ public class RoomStay {
         return create(booking, room, discount, employee, from, to, customPricePerNight, RoomStayStatus.PLANNED);
     }
 
-    private static BigDecimal calculatePricePerNight(Room room, BigDecimal discount, BigDecimal customPricePerNight) {
+    public static BigDecimal calculatePricePerNight(Room room, BigDecimal discount, BigDecimal customPricePerNight) {
+        if (discount == null) {
+            throw new IllegalArgumentException("Discount cannot be null");
+        }
+        if (discount.compareTo(BigDecimal.ZERO) < 0)
+            throw new IllegalArgumentException("Discount must be greater than or equal 0");
+        if (discount.compareTo(BigDecimal.valueOf(1)) > 0)
+            throw new IllegalArgumentException("Discount must be less than or equal to 1");
+
+
         if (customPricePerNight == null) {
             return room.getType().getPricePerNight()
-                       .multiply(BigDecimal.ONE.subtract(discount));
+                       .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
         } else {
-            return customPricePerNight;
+            if (customPricePerNight.compareTo(BigDecimal.ZERO) < 0)
+                throw new IllegalArgumentException("Price cannot be negative");
+            return customPricePerNight.setScale(2, RoundingMode.HALF_UP);
         }
     }
 }
