@@ -145,7 +145,4 @@ class RoomStayTest {
         assertThat(roomStay.getPricePerNight()).isEqualByComparingTo(customPrice);
         assertThat(roomStay.getStatus()).isEqualTo(RoomStayStatus.PLANNED);
     }
-
-
-
 }
