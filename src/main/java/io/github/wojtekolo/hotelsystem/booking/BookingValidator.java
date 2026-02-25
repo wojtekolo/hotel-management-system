@@ -56,11 +56,7 @@ public class BookingValidator {
                 if (!staysCopy.get(j).doesCollide()) continue;
                 if (!Objects.equals(staysCopy.get(i).getRoom().getId(), staysCopy.get(j).getRoom().getId())) break;
 
-                if (doStaysOverLap(staysCopy.get(i), staysCopy.get(j)) &&
-                        Objects.equals(
-                                staysCopy.get(i).getRoom().getId(),
-                                staysCopy.get(j).getRoom().getId()
-                        )) {
+                if (doStaysOverLap(staysCopy.get(i), staysCopy.get(j))) {
                     conflicts.add(new InternalRoomStayConflict(
                             staysCopy.get(i).getRoom().getId(),
                             staysCopy.get(i).getId(),

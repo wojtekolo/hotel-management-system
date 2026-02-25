@@ -17,52 +17,61 @@ public class BookingTestUtils {
     public static final Long DEFAULT_EMPLOYEE_ID = 1L;
     public static final Long DEFAULT_CUSTOMER_ID = 20L;
 
-    public static Booking.BookingBuilder aValidBooking(Customer customer, Employee createEmployee){
+    public static Booking.BookingBuilder aValidBooking(Customer customer, Employee createEmployee) {
         return Booking.builder()
-                .customer(customer)
-                .createBy(createEmployee)
-                .status(BookingStatus.PLANNED)
-                .paymentStatus(PaymentStatus.UNPAID)
-                .stays(new ArrayList<>());
+                      .customer(customer)
+                      .createBy(createEmployee)
+                      .status(BookingStatus.PLANNED)
+                      .paymentStatus(PaymentStatus.UNPAID)
+                      .stays(new ArrayList<>());
     }
 
-    public static Booking.BookingBuilder aValidBooking(){
+    public static Booking.BookingBuilder aValidBooking() {
         return Booking.builder()
-                .customer(CustomerTestUtils.aValidCustomer().build())
-                .createBy(EmployeeTestUtils.aValidEmployee().build())
-                .status(BookingStatus.PLANNED)
-                .paymentStatus(PaymentStatus.UNPAID)
-                .stays(new ArrayList<>());
+                      .customer(CustomerTestUtils.aValidCustomer().build())
+                      .createBy(EmployeeTestUtils.aValidEmployee().build())
+                      .status(BookingStatus.PLANNED)
+                      .paymentStatus(PaymentStatus.UNPAID)
+                      .stays(new ArrayList<>());
     }
 
-    public static RoomStay.RoomStayBuilder aValidRoomStay(Booking booking, Room room, Employee createEmployee){
+    public static RoomStay.RoomStayBuilder aValidRoomStay(Booking booking, Room room, Employee createEmployee) {
         return RoomStay.builder()
-                .booking(booking)
+                       .booking(booking)
+                       .room(room)
+                       .createBy(createEmployee)
+                       .pricePerNight(BigDecimal.valueOf(500))
+                       .activeFrom(LocalDate.now().plusDays(10))
+                       .activeTo(LocalDate.now().plusDays(15))
+                       .status(RoomStayStatus.PLANNED);
+    }
+
+    public static RoomStay.RoomStayBuilder aValidRoomStay() {
+        return RoomStay.builder()
+                       .booking(aValidBooking().build())
+                       .room(RoomTestUtils.aValidRoom().build())
+                       .createBy(EmployeeTestUtils.aValidEmployee().build())
+                       .pricePerNight(BigDecimal.valueOf(500))
+                       .activeFrom(LocalDate.now().plusDays(10))
+                       .activeTo(LocalDate.now().plusDays(15))
+                       .status(RoomStayStatus.PLANNED);
+    }
+
+    public static RoomStay buildRoomStay(Long id, Room room, LocalDate from, LocalDate to) {
+        return aValidRoomStay()
+                .id(id)
                 .room(room)
-                .createBy(createEmployee)
-                .pricePerNight(BigDecimal.valueOf(500))
-                .activeFrom(LocalDate.now().plusDays(10))
-                .activeTo(LocalDate.now().plusDays(15))
-                .status(RoomStayStatus.PLANNED);
+                .activeFrom(from)
+                .activeTo(to)
+                .build();
     }
 
-    public static RoomStay.RoomStayBuilder aValidRoomStay(){
-        return RoomStay.builder()
-                .booking(aValidBooking().build())
-                .room(RoomTestUtils.aValidRoom().build())
-                .createBy(EmployeeTestUtils.aValidEmployee().build())
-                .pricePerNight(BigDecimal.valueOf(500))
-                .activeFrom(LocalDate.now().plusDays(10))
-                .activeTo(LocalDate.now().plusDays(15))
-                .status(RoomStayStatus.PLANNED);
-    }
-
-    public static RoomStayCreateRequest.RoomStayCreateRequestBuilder aValidRoomStayRequest(Long roomId, LocalDate today){
+    public static RoomStayCreateRequest.RoomStayCreateRequestBuilder aValidRoomStayRequest(Long roomId, LocalDate today) {
         return RoomStayCreateRequest.builder()
-                .roomId(roomId)
-                .from(today.plusDays(1))
-                .to(today.plusDays(10))
-                .customPricePerNight(BigDecimal.valueOf(500));
+                                    .roomId(roomId)
+                                    .from(today.plusDays(1))
+                                    .to(today.plusDays(10))
+                                    .customPricePerNight(BigDecimal.valueOf(500));
     }
 
     public static BookingCreateRequest createBookingCreateRequest(List<RoomStayCreateRequest> stayRequests) {
