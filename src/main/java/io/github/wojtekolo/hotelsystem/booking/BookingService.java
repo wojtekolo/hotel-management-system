@@ -42,7 +42,7 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
 
-        return bookingMapper.toBookingDetails(booking, booking.calculateTotalCost(), toRoomStayDetailsList(booking.getStays()));
+        return bookingMapper.toBookingDetails(booking);
     }
 
     @Transactional
@@ -58,7 +58,7 @@ public class BookingService {
 
 
         booking = bookingRepository.save(booking);
-        return bookingMapper.toBookingDetails(booking, booking.calculateTotalCost(), toRoomStayDetailsList(booking.getStays()));
+        return bookingMapper.toBookingDetails(booking);
     }
 
     private void updateRoomStays(Booking booking, List<RoomStayUpdateRequest> newStays, Employee employee) {
@@ -136,15 +136,7 @@ public class BookingService {
         ));
     }
 
-    private List<RoomStayDetails> toRoomStayDetailsList(List<RoomStay> roomStays) {
-        List<RoomStayDetails> result = new ArrayList<>();
-        for (RoomStay roomStay : roomStays) {
-            result.add(
-                    bookingMapper.toRoomStayDetails(roomStay, roomStay.calculateTotalCost())
-            );
-        }
-        return result;
-    }
+
 
     private RoomStayBadStatusDetails updateRoom(RoomStay roomStay, Long newRoomId){
         try {
