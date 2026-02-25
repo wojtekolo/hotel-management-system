@@ -99,33 +99,14 @@ public class BookingService {
         for (RoomStayUpdateRequest request : newStays) {
             if (request.id() == null) continue;
             RoomStay roomStay = currentStaysMap.get(request.id());
+            if (roomStay == null) continue;
 
-            try {
-                Room newRoom = roomRepository.findById(request.roomId()).orElseThrow(NoSuchElementException::new);
-                if (!roomStay.tryUpdateRoom(newRoom)) {
-                    badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
-                            RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_ROOM_EDITED));
-                }
-            } catch (NoSuchElementException e) {
-                badStatusDetails.add(new RoomStayBadStatusDetails(
-                        roomStay.getId(), roomStay.getStatus(), RoomStayErrorCode.ROOM_NOT_FOUND));
-                continue;
-            }
-
-            if (!roomStay.tryUpdateActiveFrom(request.from())) {
-                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
-                        RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED));
-            }
-            if (!roomStay.tryUpdateActiveTo(request.to())) {
-                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
-                        RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED));
-            }
-            if (!roomStay.tryEditPrice(request.pricePerNight())) {
-                badStatusDetails.add(new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
-                        RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED));
-            }
+            badStatusDetails.add(updateRoom(roomStay, request.roomId()));
+            badStatusDetails.add(updateStartDate(roomStay, request.from()));
+            badStatusDetails.add(updateEndDate(roomStay, request.to()));
+            badStatusDetails.add(updatePricePerNight(roomStay, request.pricePerNight()));
         }
-        return badStatusDetails;
+        return badStatusDetails.stream().filter(Objects::nonNull).toList();
     }
 
     private void addInitialStays(Booking booking, List<RoomStayCreateRequest> stayRequests, Employee employee) {
@@ -163,6 +144,58 @@ public class BookingService {
             );
         }
         return result;
+    }
+
+    private RoomStayBadStatusDetails updateRoom(RoomStay roomStay, Long newRoomId){
+        try {
+            Room newRoom = roomRepository.findById(newRoomId).orElseThrow(NoSuchElementException::new);
+            if (!roomStay.tryUpdateRoom(newRoom)) {
+                return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                        RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_ROOM_EDITED);
+            }
+        } catch (NoSuchElementException e) {
+            return (new RoomStayBadStatusDetails(
+                    roomStay.getId(), roomStay.getStatus(), RoomStayErrorCode.ROOM_NOT_FOUND));
+        }
+        return null;
+    }
+
+    private RoomStayBadStatusDetails updateStartDate(RoomStay roomStay, LocalDate newFrom){
+        if (roomStay.getActiveFrom().equals(newFrom)){
+            return null;
+        }
+        else if (newFrom.isBefore(LocalDate.now())){
+            return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                    RoomStayErrorCode.CANNOT_SET_START_DATE_IN_THE_PAST);
+        }
+        else if (!roomStay.tryUpdateActiveFrom(newFrom)) {
+            return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                    RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED);
+        }
+        return null;
+    }
+
+    private RoomStayBadStatusDetails updateEndDate(RoomStay roomStay, LocalDate newTo){
+        if (roomStay.getActiveTo().equals(newTo)){
+            return null;
+        }
+        else if (newTo.isBefore(LocalDate.now())){
+            return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                    RoomStayErrorCode.CANNOT_SET_END_DATE_IN_THE_PAST);
+        }
+        else if (!roomStay.tryUpdateActiveTo(newTo)) {
+            return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                    RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED);
+        }
+        return null;
+    }
+
+    private RoomStayBadStatusDetails updatePricePerNight(RoomStay roomStay, BigDecimal pricePerNight){
+        if (!roomStay.tryEditPrice(pricePerNight)) {
+            return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
+                    RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED);
+        }
+        return null;
     }
 
     private Employee findEmployee(Long id) {
