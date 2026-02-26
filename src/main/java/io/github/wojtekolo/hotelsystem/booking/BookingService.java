@@ -38,7 +38,7 @@ public class BookingService {
         List<ExternalRoomStayConflict> externalConflicts = bookingValidator.validateExternalConflicts(booking.getStays());
 
         if (!internalConflicts.isEmpty() || !externalConflicts.isEmpty())
-            throw new BookingValidationException("Error updating booking", externalConflicts, internalConflicts, null);
+            throw new BookingValidationException("Error adding booking", externalConflicts, internalConflicts, new ArrayList<>());
 
         booking = bookingRepository.save(booking);
 
@@ -185,7 +185,7 @@ public class BookingService {
     private RoomStayBadStatusDetails updatePricePerNight(RoomStay roomStay, BigDecimal pricePerNight){
         if (!roomStay.tryEditPrice(pricePerNight)) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
-                    RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED);
+                    RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_PRICE_EDITED);
         }
         return null;
     }
