@@ -157,7 +157,7 @@ public class RoomStay {
 
     public boolean tryEditPrice(BigDecimal newPricePerNight) {
         if (newPricePerNight == null) return true;
-        if (canEditPrice() || newPricePerNight.equals(this.pricePerNight)) {
+        if (canEditPrice() || newPricePerNight.compareTo(this.pricePerNight) == 0) {
             this.pricePerNight = newPricePerNight;
             return true;
         }
