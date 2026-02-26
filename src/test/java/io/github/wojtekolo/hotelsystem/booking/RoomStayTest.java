@@ -17,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ExtendWith(MockitoExtension.class)
 class RoomStayTest {
 
+    private final LocalDate referenceDate=LocalDate.of(2025, 1, 1);
+
     @Test
     public void should_apply_discount_when_custom_price_is_null() {
 //        given
@@ -106,7 +108,6 @@ class RoomStayTest {
     @Test
     public void should_create_planned_room_stay_with_discounted_price() {
 //        given
-        LocalDate today = LocalDate.now();
         Room room = Room.builder()
                                  .type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build())
                                  .build();
@@ -114,7 +115,7 @@ class RoomStayTest {
 
 //        when
         RoomStay roomStay = RoomStay.createPlanned(null, room, discount, null,
-                today.plusDays(5), today.plusDays(10), null);
+                referenceDate.plusDays(5), referenceDate.plusDays(10), null);
 
 //        then
         assertThat(roomStay.getPricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(450));
@@ -139,7 +140,6 @@ class RoomStayTest {
     @Test
     public void should_create_planned_room_stay_with_custom_price_ignoring_discount() {
 //        given
-        LocalDate today = LocalDate.now();
         Room room = Room.builder().type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build()).build();
 
         BigDecimal discount = BigDecimal.valueOf(0.1);
@@ -147,7 +147,7 @@ class RoomStayTest {
 
 //        when
         RoomStay roomStay = RoomStay.createPlanned(null, room, discount, null,
-                today.plusDays(5), today.plusDays(10), customPrice);
+                referenceDate.plusDays(5), referenceDate.plusDays(10), customPrice);
 
 //        then
         assertThat(roomStay.getPricePerNight()).isEqualByComparingTo(customPrice);
