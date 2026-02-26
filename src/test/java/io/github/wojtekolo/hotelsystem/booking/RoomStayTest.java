@@ -4,6 +4,8 @@ import io.github.wojtekolo.hotelsystem.room.Room;
 import io.github.wojtekolo.hotelsystem.room.RoomTestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -18,46 +20,48 @@ class RoomStayTest {
     @Test
     public void should_apply_discount_when_custom_price_is_null() {
 //        given
-        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build()).build();
-
+        BigDecimal roomPrice = BigDecimal.valueOf(500);
+        BigDecimal discount = BigDecimal.valueOf(0.1);
+        BigDecimal customPrice = null;
 //        when
-        BigDecimal result = RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(0.1), null);
+        BigDecimal result = RoomStay.calculatePricePerNight(roomPrice, discount, customPrice);
 
 //        then
-        assertThat(result).isNotNull();
         assertThat(result).isEqualByComparingTo(BigDecimal.valueOf(450));
     }
 
     @Test
     public void should_not_apply_discount_when_custom_price() {
 //        given
-        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build()).build();
-
+        BigDecimal roomPrice = BigDecimal.valueOf(500);
+        BigDecimal discount = BigDecimal.valueOf(0.1);
+        BigDecimal customPrice = BigDecimal.valueOf(300);
 //        when
-        BigDecimal result = RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(0.1), BigDecimal.valueOf(300));
+        BigDecimal result = RoomStay.calculatePricePerNight(roomPrice, discount, customPrice);
 
 //        then
-        assertThat(result).isNotNull();
         assertThat(result).isEqualByComparingTo(BigDecimal.valueOf(300));
     }
 
     @Test
     public void should_fail_when_discount_is_less_than_0() {
 //        given
-        Room room = RoomTestUtils.aValidRoom().build();
-
+        BigDecimal roomPrice = BigDecimal.valueOf(100);
+        BigDecimal discount = BigDecimal.valueOf(-1);
+        BigDecimal customPrice = BigDecimal.valueOf(300);
 //        when and then
-        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(-0.1), BigDecimal.valueOf(300)))
+        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(roomPrice, discount, customPrice))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void should_succeed_when_discount_is_equal_to_0() {
 //        given
-        Room room = RoomTestUtils.aValidRoom().build();
-
+        BigDecimal roomPrice = BigDecimal.valueOf(100);
+        BigDecimal discount = BigDecimal.ZERO;
+        BigDecimal customPrice = BigDecimal.valueOf(300);
 //        when
-        BigDecimal result = RoomStay.calculatePricePerNight(room, BigDecimal.ZERO, BigDecimal.valueOf(300));
+        BigDecimal result = RoomStay.calculatePricePerNight(roomPrice, discount, customPrice);
 
 //        then
         assertThat(result).isEqualByComparingTo(BigDecimal.valueOf(300));
@@ -66,41 +70,46 @@ class RoomStayTest {
     @Test
     public void should_succeed_when_discount_is_equal_to_1() {
 //        given
-        Room room = RoomTestUtils.aValidRoom().build();
+        BigDecimal roomPrice = BigDecimal.valueOf(100);
+        BigDecimal discount = BigDecimal.valueOf(1);
+        BigDecimal customPrice = null;
+//        when
+        BigDecimal result = RoomStay.calculatePricePerNight(roomPrice, discount, customPrice);
 
-//        when and then
-        BigDecimal result = RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(1), null);
-
+//        then
         assertThat(result).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
     public void should_fail_when_discount_is_greater_than_1() {
 //        given
-        Room room = RoomTestUtils.aValidRoom().build();
-
+        BigDecimal roomPrice = BigDecimal.valueOf(100);
+        BigDecimal discount = BigDecimal.valueOf(2);
+        BigDecimal customPrice = null;
 //        when and then
-        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(1.1), BigDecimal.valueOf(300)))
+        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(roomPrice, discount, customPrice))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void should_fail_when_custom_price_is_negative() {
 //        given
-        Room room = RoomTestUtils.aValidRoom().build();
+        BigDecimal roomPrice = BigDecimal.valueOf(100);
+        BigDecimal discount = BigDecimal.valueOf(0.1);
+        BigDecimal customPrice = BigDecimal.valueOf(-300);
 
 //        when and then
-        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(0.1), BigDecimal.valueOf(-300)))
+        assertThatThrownBy(() -> RoomStay.calculatePricePerNight(roomPrice, discount, customPrice))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void should_create_planned_room_stay_with_discounted_price(){
+    public void should_create_planned_room_stay_with_discounted_price() {
 //        given
         LocalDate today = LocalDate.now();
-        Room room = RoomTestUtils.aValidRoom()
-                .type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build())
-                .build();
+        Room room = Room.builder()
+                                 .type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build())
+                                 .build();
         BigDecimal discount = BigDecimal.valueOf(0.1);
 
 //        when
@@ -116,24 +125,23 @@ class RoomStayTest {
     public void should_handle_rounding_correctly() {
 //        given
 //        133.33 * 0.9 = 119.997
-        Room room = RoomTestUtils.aValidRoom(
-                RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(133.33)).build()
-        ).build();
+        BigDecimal discount = new BigDecimal("0.1");
+        BigDecimal roomPrice = new BigDecimal("133.33");
+        BigDecimal customPrice = null;
 
 //        when
-        BigDecimal result = RoomStay.calculatePricePerNight(room, BigDecimal.valueOf(0.1), null);
+        BigDecimal result = RoomStay.calculatePricePerNight(roomPrice, discount, customPrice);
 
 //        then
         assertThat(result).isEqualByComparingTo(new BigDecimal("120.00"));
     }
 
     @Test
-    public void should_create_planned_room_stay_with_custom_price_ignoring_discount(){
+    public void should_create_planned_room_stay_with_custom_price_ignoring_discount() {
 //        given
         LocalDate today = LocalDate.now();
-        Room room = RoomTestUtils.aValidRoom()
-                .type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build())
-                .build();
+        Room room = Room.builder().type(RoomTestUtils.aValidType().pricePerNight(BigDecimal.valueOf(500)).build()).build();
+
         BigDecimal discount = BigDecimal.valueOf(0.1);
         BigDecimal customPrice = BigDecimal.valueOf(600);
 

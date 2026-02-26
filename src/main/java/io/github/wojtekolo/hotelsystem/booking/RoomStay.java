@@ -123,7 +123,7 @@ public class RoomStay {
         return RoomStay.builder()
                        .booking(booking)
                        .room(room)
-                       .pricePerNight(calculatePricePerNight(room, discount, customPricePerNight))
+                       .pricePerNight(calculatePricePerNight(room.getType().getPricePerNight(), discount, customPricePerNight))
                        .activeFrom(from)
                        .activeTo(to)
                        .status(status)
@@ -176,7 +176,7 @@ public class RoomStay {
         return create(booking, room, discount, employee, from, to, customPricePerNight, RoomStayStatus.PLANNED);
     }
 
-    public static BigDecimal calculatePricePerNight(Room room, BigDecimal discount, BigDecimal customPricePerNight) {
+    public static BigDecimal calculatePricePerNight(BigDecimal roomPricePerNight, BigDecimal discount, BigDecimal customPricePerNight) {
         if (discount == null) {
             throw new IllegalArgumentException("Discount cannot be null");
         }
@@ -187,7 +187,7 @@ public class RoomStay {
 
 
         if (customPricePerNight == null) {
-            return room.getType().getPricePerNight()
+            return roomPricePerNight
                        .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
         } else {
             if (customPricePerNight.compareTo(BigDecimal.ZERO) < 0)
