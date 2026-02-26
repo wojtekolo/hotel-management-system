@@ -11,6 +11,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
 
 @Entity
@@ -108,6 +109,10 @@ public class RoomStay {
 
     public boolean doesCollide() {
         return status == RoomStayStatus.PLANNED || status == RoomStayStatus.ACTIVE;
+    }
+
+    public boolean countsTowardTotal() {
+        return EnumSet.of(RoomStayStatus.PLANNED, RoomStayStatus.ACTIVE, RoomStayStatus.COMPLETED).contains(status);
     }
 
     public boolean canEditRoom() {

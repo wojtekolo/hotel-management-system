@@ -57,7 +57,7 @@ public class Booking {
     public BigDecimal calculateTotalCost() {
         BigDecimal total = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         for (RoomStay roomStay : stays) {
-            total = total.add(roomStay.calculateTotalCost());
+            if (roomStay.countsTowardTotal()) total = total.add(roomStay.calculateTotalCost());
         }
         return total;
     }
