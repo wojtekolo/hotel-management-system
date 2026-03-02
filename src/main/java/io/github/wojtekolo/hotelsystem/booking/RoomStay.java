@@ -7,8 +7,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
 
 @Entity
@@ -73,13 +76,123 @@ public class RoomStay {
     private Employee checkOutBy;
 
     @PrePersist
-    private void setCreateTime(){
+    private void setCreateTime() {
         createTime = LocalDateTime.now();
         lastUpdateTime = LocalDateTime.now();
     }
 
     @PreUpdate
-    private void setUpdateTime(){
+    private void setUpdateTime() {
         this.lastUpdateTime = LocalDateTime.now();
+    }
+
+    public BigDecimal calculateTotalCost() {
+        long days = ChronoUnit.DAYS.between(activeFrom, activeTo);
+        return pricePerNight.multiply(BigDecimal.valueOf(days));
+    }
+
+    public boolean canBeCancelled() {
+        return status == RoomStayStatus.CANCELLED || status == RoomStayStatus.PLANNED;
+    }
+
+    public boolean canEditPrice() {
+        return status == RoomStayStatus.PLANNED;
+    }
+
+    public boolean canEditStartDate() {
+        return status == RoomStayStatus.PLANNED;
+    }
+
+    public boolean canEditEndDate() {
+        return status == RoomStayStatus.PLANNED || status == RoomStayStatus.ACTIVE;
+    }
+
+    public boolean doesCollide() {
+        return status == RoomStayStatus.PLANNED || status == RoomStayStatus.ACTIVE;
+    }
+
+    public boolean countsTowardTotal() {
+        return EnumSet.of(RoomStayStatus.PLANNED, RoomStayStatus.ACTIVE, RoomStayStatus.COMPLETED).contains(status);
+    }
+
+    public boolean canEditRoom() {
+        return status == RoomStayStatus.PLANNED;
+    }
+
+    public static RoomStay create(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight, RoomStayStatus status) {
+        return RoomStay.builder()
+                       .booking(booking)
+                       .room(room)
+                       .pricePerNight(calculatePricePerNight(room.getType().getPricePerNight(), discount, customPricePerNight))
+                       .activeFrom(from)
+                       .activeTo(to)
+                       .status(status)
+                       .createBy(employee)
+                       .build();
+    }
+
+    public boolean tryCancel() {
+        if (canBeCancelled()) {
+            this.status = RoomStayStatus.CANCELLED;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean tryUpdateActiveFrom(LocalDate newActiveFrom) {
+        if (canEditStartDate() || newActiveFrom.equals(this.activeFrom)) {
+            this.activeFrom = newActiveFrom;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean tryUpdateActiveTo(LocalDate newActiveTo) {
+        if (canEditEndDate() || newActiveTo.equals(this.activeTo)) {
+            this.activeTo = newActiveTo;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean tryEditPrice(BigDecimal newPricePerNight) {
+        if (newPricePerNight == null) return true;
+        if (canEditPrice() || newPricePerNight.compareTo(this.pricePerNight) == 0) {
+            this.pricePerNight = newPricePerNight;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean tryUpdateRoom(Room room) {
+        if (canEditRoom() || room.getId().equals(this.room.getId())) {
+            this.room = room;
+            return true;
+        }
+        return false;
+    }
+
+    public static RoomStay createPlanned(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
+        return create(booking, room, discount, employee, from, to, customPricePerNight, RoomStayStatus.PLANNED);
+    }
+
+    public static BigDecimal calculatePricePerNight(BigDecimal roomPricePerNight, BigDecimal discount, BigDecimal customPricePerNight) {
+        if (discount == null) {
+            throw new IllegalArgumentException("Discount cannot be null");
+        }
+        if (discount.compareTo(BigDecimal.ZERO) < 0)
+            throw new IllegalArgumentException("Discount must be greater than or equal 0");
+        if (discount.compareTo(BigDecimal.valueOf(1)) > 0)
+            throw new IllegalArgumentException("Discount must be less than or equal to 1");
+
+
+        if (customPricePerNight == null) {
+            return roomPricePerNight
+                       .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
+        } else {
+            if (customPricePerNight.compareTo(BigDecimal.ZERO) < 0)
+                throw new IllegalArgumentException("Price cannot be negative");
+            return customPricePerNight.setScale(2, RoundingMode.HALF_UP);
+        }
     }
 }

@@ -16,6 +16,9 @@ public class RoomTestUtils {
                 .lifecycleStatus(LifecycleStatus.ACTIVE)
                 .operationalStatus(OperationalStatus.CLEAN);
     }
+    public static Room.RoomBuilder aValidRoom() {
+        return aValidRoom(aValidType().build());
+    }
     public static RoomType.RoomTypeBuilder aValidType(){
         return RoomType.builder()
                 .name(String.valueOf(counter++))

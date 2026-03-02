@@ -14,6 +14,9 @@ public class CustomerTestUtils {
                 .privateEmail("testCustomer@email.com")
                 .privatePhone("123456789");
     }
+    public static Customer.CustomerBuilder aValidCustomer(){
+        return aValidCustomer(PersonTestUtils.aValidPerson().build(), aValidLoyaltyStatus().build());
+    }
 
 
     public static LoyaltyStatus.LoyaltyStatusBuilder aValidLoyaltyStatus(){

@@ -2,9 +2,9 @@ package io.github.wojtekolo.hotelsystem.booking;
 
 import java.util.List;
 
-public record BookingCreateRequest(
-        Long customerId,
+public record BookingUpdateRequest(
+        Long bookingId,
         Long employeeId,
-        List<RoomStayCreateRequest> stays
+        List<RoomStayUpdateRequest> stays
 ) {
 }

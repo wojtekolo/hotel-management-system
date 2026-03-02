@@ -1,8 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingRequestConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
+import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.*;
 import io.github.wojtekolo.hotelsystem.employee.Employee;
@@ -13,20 +11,21 @@ import io.github.wojtekolo.hotelsystem.room.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -40,22 +39,24 @@ class BookingServiceTest {
 
 
     @Mock
-    EmployeeRepository employeeRepository;
+    private EmployeeRepository employeeRepository;
 
     @Mock
-    RoomRepository roomRepository;
+    private RoomRepository roomRepository;
 
     @Mock
-    CustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
 
     @Mock
-    BookingRepository bookingRepository;
+    private BookingRepository bookingRepository;
 
     @Mock
-    RoomStayRepository roomStayRepository;
+    private RoomStayRepository roomStayRepository;
 
-    @InjectMocks
-    BookingService bookingService;
+    @Mock
+    private BookingValidator bookingValidator;
+
+    private BookingService bookingService;
 
     private final LocalDate today = LocalDate.now();
 
@@ -66,203 +67,47 @@ class BookingServiceTest {
     @BeforeEach
     void setUp() {
         BookingMapper bookingMapper = new BookingMapperImpl(customerMapper, employeeMapper);
-
         bookingService = new BookingService(
                 bookingMapper,
                 employeeRepository,
                 roomRepository,
                 customerRepository,
                 roomStayRepository,
-                bookingRepository
+                bookingRepository,
+                bookingValidator
         );
     }
 
     @Test
-    public void should_calculate_correct_cost_when_custom_price_and_single_stay() {
-//        given
-        setUpEmployee();
-        setUpCustomerWithDiscount(BigDecimal.valueOf(0.03));
-        setUpCorrectBooking();
+    public void should_add_booking_when_data_is_valid() {
+        mockRoom(1L);
+        mockRoom(2L);
+        mockEmployee();
+        mockCustomer();
+        mockBooking();
 
-        Long roomId = 1L;
-
-        var stayRequest = createSingleRoomStayRequestWithPrice(
-                roomId,
-                today.plusDays(5),
-                today.plusDays(10),
-                BigDecimal.valueOf(700));
-
-        var request = createBookingRequest(List.of(stayRequest));
-
-        setUpRoomWithPrice(roomId, BigDecimal.valueOf(500));
-
+        var request = createBookingCreateRequest(List.of(
+           createRoomStayCreateRequest(1L, today.plusDays(10), today.plusDays(15)),
+           createRoomStayCreateRequest(2L, today.plusDays(10), today.plusDays(15))
+        ));
 //        when
-        BookingDetails result = bookingService.addBooking(request);
+        bookingService.addBooking(request);
 
 //        then
-//        Don't take loyaltyDiscount from loyalty status into account when price per night is custom
-        assertThat(result.stays()).isNotNull();
-        assertThat(result.stays()).hasSize(1);
-        assertThat(result.stays().getFirst().pricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(700));
-        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3500));
-    }
-
-
-    @Test
-    public void should_calculate_correct_cost_when_custom_price_and_multiple_stays() {
-//        given
-        setUpEmployee();
-        setUpCustomerWithDiscount(BigDecimal.valueOf(0.03));
-        setUpCorrectBooking();
-
-        int days = 5;
-
-        Room room1 = setUpRoomWithPrice(1L, BigDecimal.valueOf(100));
-        Room room2 = setUpRoomWithPrice(2L, BigDecimal.valueOf(200));
-        Room room3 = setUpRoomWithPrice(3L, BigDecimal.valueOf(300));
-
-        var singleStayRequest1 = createSingleRoomStayRequestWithPrice(
-                room1.getId(),
-                today.plusDays(5),
-                today.plusDays(5 + days),
-                BigDecimal.valueOf(500)
-        );
-//        5 * 500 = 2500
-
-        var singleStayRequest2 = createSingleRoomStayRequestWithPrice(
-                room2.getId(),
-                today.plusDays(5),
-                today.plusDays(6 + days),
-                BigDecimal.valueOf(600)
-        );
-//        6 * 600 = 3600
-
-        var singleStayRequest3 = createSingleRoomStayRequestWithPrice(
-                room3.getId(),
-                today.plusDays(5),
-                today.plusDays(7 + days),
-                BigDecimal.valueOf(700)
-        );
-//        7 * 700 = 4900
-//        total = 4900 + 3600 + 2500 = 11 000
-
-        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3));
-
-//        when
-        BookingDetails result = bookingService.addBooking(request);
-
-
-//        then
-        Map<Long, BigDecimal> staysPricePerNight = mapStaysPrices(result.stays());
-
-        assertThat(staysPricePerNight.get(room1.getId())).isEqualByComparingTo(BigDecimal.valueOf(500));
-        assertThat(staysPricePerNight.get(room2.getId())).isEqualByComparingTo(BigDecimal.valueOf(600));
-        assertThat(staysPricePerNight.get(room3.getId())).isEqualByComparingTo(BigDecimal.valueOf(700));
-
-//        Don't take loyaltyDiscount from loyalty status into account when price per night is custom
-        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(11000));
-
-    }
-
-    @Test
-    public void should_calculate_correct_cost_when_default_price_and_single_stay() {
-//        given
-        setUpEmployee();
-        setUpCustomerWithDiscount(BigDecimal.valueOf(0.1));
-        setUpCorrectBooking();
-
-        int days = 5;
-
-        Room room = setUpRoomWithPrice(1L, BigDecimal.valueOf(700));
-
-        var singleStayRequest = createSingleRoomStayRequest(
-                room.getId(),
-                today.plusDays(5),
-                today.plusDays(5 + days)
-        );
-
-        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest));
-
-//        when
-        BookingDetails result = bookingService.addBooking(request);
-
-        assertThat(result.stays()).isNotNull();
-        assertThat(result.stays()).hasSize(1);
-        assertThat(result.stays().getFirst().pricePerNight()).isEqualByComparingTo(BigDecimal.valueOf(630));
-        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3150));
-    }
-
-    //
-//
-    @Test
-    public void should_calculate_correct_cost_when_default_price_and_multiple_stays() {
-//        given
-        setUpEmployee();
-        setUpCustomerWithDiscount(BigDecimal.valueOf(0.1));
-        setUpCorrectBooking();
-
-        int days = 5;
-
-
-        Room room1 = setUpRoomWithPrice(1L, BigDecimal.valueOf(100));
-        Room room2 = setUpRoomWithPrice(2L, BigDecimal.valueOf(200));
-        Room room3 = setUpRoomWithPrice(3L, BigDecimal.valueOf(300));
-
-
-        var singleStayRequest1 = createSingleRoomStayRequest(
-                room1.getId(),
-                today.plusDays(5),
-                today.plusDays(5 + days)
-        );
-//        5 * 100 = 500
-
-        var singleStayRequest2 = createSingleRoomStayRequest(
-                room2.getId(),
-                today.plusDays(5),
-                today.plusDays(5 + days + 1)
-        );
-//        6 * 200 = 1200
-
-        var singleStayRequest3 = createSingleRoomStayRequest(
-                room3.getId(),
-                today.plusDays(5),
-                today.plusDays(5 + days + 2)
-        );
-//        7 * 300 = 2100
-
-//        default total = 2100 + 1200 + 500 = 3800
-//        after loyalty status loyaltyDiscount = 3800 * 0.9 = 3420
-
-        BookingCreateRequest request = createBookingRequest(List.of(singleStayRequest1, singleStayRequest2, singleStayRequest3));
-
-
-//        when
-        BookingDetails result = bookingService.addBooking(request);
-
-//        then
-        Map<Long, BigDecimal> staysPricePerNight = mapStaysPrices(result.stays());
-
-        assertThat(staysPricePerNight.get(room1.getId())).isEqualByComparingTo(BigDecimal.valueOf(90));
-        assertThat(staysPricePerNight.get(room2.getId())).isEqualByComparingTo(BigDecimal.valueOf(180));
-        assertThat(staysPricePerNight.get(room3.getId())).isEqualByComparingTo(BigDecimal.valueOf(270));
-
-        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(3420));
+        verify(bookingRepository, times(1)).save(any());
+        verify(bookingValidator, times(1)).validateInternalConflicts(any());
+        verify(bookingValidator, times(1)).validateExternalConflicts(any());
     }
 
     @Test
     public void should_throw_resource_not_found_when_invalid_employee() {
 //        given
-
-        var stayRequest = createSingleRoomStayRequest(
-                1L,
-                today.plusDays(5),
-                today.plusDays(10)
-        );
-
         var request = new BookingCreateRequest(
                 customerId,
                 employeeId + 1,
-                List.of(stayRequest)
+                List.of(
+                        createRoomStayCreateRequest(1L, today.plusDays(5), today.plusDays(10))
+                )
         );
         assertThatThrownBy(() ->
                 bookingService.addBooking(request)
@@ -274,18 +119,14 @@ class BookingServiceTest {
 
     @Test
     public void should_throw_resource_not_found_when_invalid_customer() {
-        setUpEmployee();
-
-        var stayRequest = createSingleRoomStayRequest(
-                1L,
-                today.plusDays(5),
-                today.plusDays(10)
-        );
+        mockEmployee();
 
         var request = new BookingCreateRequest(
                 customerId + 1,
                 employeeId,
-                List.of(stayRequest)
+                List.of(
+                        createRoomStayCreateRequest(1L, today.plusDays(5), today.plusDays(10))
+                )
         );
 
         assertThatThrownBy(() ->
@@ -298,16 +139,16 @@ class BookingServiceTest {
 
     @Test
     public void should_throw_resource_not_found_when_invalid_room() {
-        setUpEmployee();
-        setUpCustomer();
+        mockEmployee();
+        mockCustomer();
 
-        var stayRequest = createSingleRoomStayRequest(
-                15L,
-                today.plusDays(5),
-                today.plusDays(10)
-        );
-
-        BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
+        BookingCreateRequest request = createBookingCreateRequest(List.of(
+                createRoomStayCreateRequest(
+                        15L,
+                        today.plusDays(5),
+                        today.plusDays(10)
+                )
+        ));
 
         assertThatThrownBy(() ->
                 bookingService.addBooking(request)
@@ -317,243 +158,201 @@ class BookingServiceTest {
                 .hasMessageContaining(String.valueOf(15L));
     }
 
+
+
+//    -------------UPDATE TESTS-------------
+
     @Test
-    public void should_throw_booking_conflict_when_single_stay() {
+    public void should_update_single_stay() {
 //        given
-        setUpEmployee();
-        setUpCustomer();
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        mockBooking();
 
-        Long roomId = 1L;
+        Room room = mockRoom(2L, "roomname2");
 
-        Room room = setUpRoomWithName(1L, "roomname");
 
-        LocalDate from = today.plusDays(5);
-        LocalDate to = today.plusDays(10);
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(20)));
+        mockBooking(booking);
 
-        var stayRequest = createSingleRoomStayRequest(
-                roomId,
-                today.plusDays(5),
-                today.plusDays(10)
-        );
-
-        BookingCreateRequest request = createBookingRequest(List.of(stayRequest));
-
-        when(roomStayRepository.getConflicts(
-                roomId,
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to
-        )).thenReturn(List.of(RoomStay.builder()
-                .id(15L)
-                .room(room)
-                .pricePerNight(BigDecimal.valueOf(123))
-                .activeFrom(from.plusDays(1))
-                .activeTo(to)
-                .build()));
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(1L, 2L, today.plusDays(12), today.plusDays(15))
+        ));
 
 //        when
-        assertThatThrownBy(() ->
-                bookingService.addBooking(request)
-        )
-                .isInstanceOf(BookingConflictException.class)
-                .satisfies(ex -> {
-                    BookingConflictException bookingEx = (BookingConflictException) ex;
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
 
-                    assertThat(bookingEx.getConflicts())
-                            .extracting(RoomStayConflict::roomName)
-                            .contains("roomname");
-
-                    assertThat(bookingEx.getConflicts())
-                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
-                            .extracting(RoomStayConflictDetails::roomStayId)
-                            .contains(15L);
-                });
+//        then
+        assertThat(details.stays().getFirst().roomId()).isEqualTo(2L);
+        assertThat(details.stays().getFirst().roomName()).isEqualTo("roomname2");
+        assertThat(details.stays().getFirst().activeFrom()).isEqualTo(today.plusDays(12));
+        assertThat(details.stays().getFirst().activeTo()).isEqualTo(today.plusDays(15));
     }
 
     @Test
-    public void booking_conflict_response_should_contain_only_rooms_unavailable_in_chosen_period() {
+    public void should_update_multiple_stays_for_the_same_room() {
 //        given
-        setUpEmployee();
-        setUpCustomer();
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        mockBooking();
 
-        Room room1 = setUpRoomWithName(1L, "roomname1");
-        Room room2 = setUpRoomWithName(2L, "roomname2");
-        Room room3 = setUpRoomWithName(3L, "roomname3");
+        Room room = mockRoom(1L);
 
-        LocalDate from = today.plusDays(5);
-        LocalDate to = today.plusDays(10);
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(15)));
+        booking.addStay(buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20))); //asdas
+        mockBooking(booking);
 
-        var stayRequest1 = createSingleRoomStayRequest(
-                room1.getId(),
-                from,
-                to
-        );
-        var stayRequest2 = createSingleRoomStayRequest(
-                room2.getId(),
-                from,
-                to
-        );
-        var stayRequest3 = createSingleRoomStayRequest(
-                room3.getId(),
-                from,
-                to
-        );
-
-        BookingCreateRequest request = createBookingRequest(List.of(stayRequest1, stayRequest2, stayRequest3));
-
-        when(roomStayRepository.getConflicts(
-                room1.getId(),
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to
-        )).thenReturn(
-                List.of(RoomStay.builder()
-                        .id(15L)
-                        .room(room1)
-                        .activeFrom(from)
-                        .activeTo(to)
-                        .build())
-        );
-
-        when(roomStayRepository.getConflicts(
-                room2.getId(),
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to
-        )).thenReturn(
-                List.of(
-                        RoomStay.builder()
-                                .id(16L)
-                                .room(room2)
-                                .activeFrom(from)
-                                .activeTo(to.plusDays(1))
-                                .build(),
-                        RoomStay.builder()
-                                .id(17L)
-                                .room(room2)
-                                .activeFrom(from)
-                                .activeTo(to)
-                                .build())
-        );
-
-        when(roomStayRepository.getConflicts(
-                room3.getId(),
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to
-        )).thenReturn(
-                List.of()
-        );
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16)),
+                createRoomStayUpdateRequest(2L, 1L, today.plusDays(16), today.plusDays(21)) //asdas
+        ));
 
 //        when
-        assertThatThrownBy(() -> bookingService.addBooking(request)).isInstanceOf(BookingConflictException.class)
-                .isInstanceOf(BookingConflictException.class)
-                .satisfies(e -> {
-                    BookingConflictException bookingEx = (BookingConflictException) e;
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
 
-                    assertThat(bookingEx.getConflicts())
-                            .hasSize(2)
-                            .extracting(RoomStayConflict::roomName)
-                            .containsExactlyInAnyOrder("roomname1", "roomname2")
-                            .doesNotContain("roomname3");
+//        then
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::activeFrom)
+                .containsExactlyInAnyOrder(today.plusDays(11), today.plusDays(16));
 
-                    assertThat(bookingEx.getConflicts())
-                            .flatExtracting(RoomStayConflict::roomConflictsDetails)
-                            .extracting(RoomStayConflictDetails::roomStayId)
-                            .containsExactlyInAnyOrder(15L, 16L, 17L);
-                });
-
-
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::activeTo)
+                .containsExactlyInAnyOrder(today.plusDays(21),today.plusDays(16));
     }
 
     @Test
-    public void should_throw_booking_request_conflict_when_there_is_overlap_between_sequential_stays(){
-        setUpEmployee();
-        setUpCustomer();
+    public void should_change_status_to_cancelled_when_deleting_stay() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        mockBooking();
 
-        LocalDate today = LocalDate.now();
+        Room room = mockRoom(1L);
 
-        var stay1 = createSingleRoomStayRequest(1L, today.plusDays(10), today.plusDays(15));
-        var stay2 = createSingleRoomStayRequest(1L, today.plusDays(13), today.plusDays(18));
-        var stay3 = createSingleRoomStayRequest(1L, today.plusDays(17), today.plusDays(20));
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
 
-        var booking = createBookingRequest(List.of(stay1, stay2, stay3));
+        booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(15)));
+        RoomStay stayToBeRemoved = buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20));
+        booking.addStay(stayToBeRemoved);
+
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16))
+        ));
 
 //        when
-        assertThatThrownBy(()->bookingService.addBooking(booking))
-                .isInstanceOf(BookingRequestConflictException.class)
-                .satisfies(e ->{
-                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
 
-                    assertThat(bookingEx.getConflicts())
-                            .hasSize(2)
-                            .extracting(InternalRoomStayConflict::from1)
-                            .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(13));
+//        then
+        assertThat(details.stays()).hasSize(2);
+        assertThat(stayToBeRemoved.getStatus()).isEqualTo(RoomStayStatus.CANCELLED);
+    }
 
-                    assertThat(bookingEx.getConflicts())
-                            .extracting(InternalRoomStayConflict::to2)
-                            .containsExactlyInAnyOrder(today.plusDays(18), today.plusDays(20));
+    @ParameterizedTest
+    @EnumSource(value = RoomStayStatus.class, names = {"ACTIVE", "COMPLETED", "NOSHOW"})
+    public void should_fail_when_removing_stay_in_illegal_status(RoomStayStatus illegalStatus) {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        Room room = RoomTestUtils.aValidRoom().build();
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+
+        RoomStay stayToBeRemoved1 = buildStay(2L, room, employee, today.plusDays(10), today.plusDays(12));
+        stayToBeRemoved1.setStatus(illegalStatus);
+        booking.addStay(stayToBeRemoved1);
+
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of());
+
+//        when and then
+        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+                .isInstanceOf(BookingValidationException.class)
+                .satisfies(ex ->{
+                    BookingValidationException roomStayEx = (BookingValidationException) ex;
+                    assertThat(roomStayEx.getBadStatusDetails())
+                            .extracting(RoomStayBadStatusDetails::id, RoomStayBadStatusDetails::status, RoomStayBadStatusDetails::errorCode)
+                            .containsExactlyInAnyOrder(tuple(2L, illegalStatus, RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_BE_CANCELLED));
                 });
-
     }
 
     @Test
-    public void should_throw_booking_request_conflict_when_one_stay_overlaps_multiple_others(){
-        setUpEmployee();
-        setUpCustomer();
+    public void should_change_active_stay_end_date() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+        mockBooking();
 
-        LocalDate today = LocalDate.now();
+        Room room = mockRoom(2L);
 
-        var stay1 = createSingleRoomStayRequest(1L, today.plusDays(10), today.plusDays(30));
-        var stay2 = createSingleRoomStayRequest(1L, today.plusDays(13), today.plusDays(15));
-        var stay3 = createSingleRoomStayRequest(1L, today.plusDays(16), today.plusDays(20));
-        var stay4 = createSingleRoomStayRequest(1L, today.plusDays(22), today.plusDays(25));
 
-        var booking = createBookingRequest(List.of(stay1, stay2, stay3, stay4));
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(5L, room, employee, today.plusDays(10), today.plusDays(20)));
+        booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(5L, 2L, today.plusDays(10), today.plusDays(22))
+        ));
 
 //        when
-        assertThatThrownBy(()->bookingService.addBooking(booking))
-                .isInstanceOf(BookingRequestConflictException.class)
-                .satisfies(e ->{
-                    BookingRequestConflictException bookingEx = (BookingRequestConflictException) e;
+        BookingDetails details = bookingService.updateBooking(newBookingRequest);
 
-                    assertThat(bookingEx.getConflicts())
-                            .hasSize(3)
-                            .extracting(InternalRoomStayConflict::from1)
-                            .containsExactlyInAnyOrder(today.plusDays(10), today.plusDays(10), today.plusDays(10));
+//        then
+        assertThat(details.stays())
+                .extracting(RoomStayDetails::id, RoomStayDetails::status, RoomStayDetails::activeTo)
+                .containsExactlyInAnyOrder(tuple(5L, RoomStayStatus.ACTIVE, today.plusDays(22)));
+    }
 
-                    assertThat(bookingEx.getConflicts())
-                            .extracting(InternalRoomStayConflict::to2)
-                            .containsExactlyInAnyOrder(today.plusDays(15), today.plusDays(20), today.plusDays(25));
+    @Test
+    public void should_not_change_active_stay_start_date() {
+//        given
+        Customer customer = CustomerTestUtils.aValidCustomer().build();
+        Employee employee = mockEmployee();
+
+        Room room = mockRoom(2L);
+
+
+        Booking booking = BookingTestUtils.aValidBooking(customer, employee).id(1L).build();
+        booking.addStay(buildStay(5L, room, employee, today.plusDays(10), today.plusDays(20)));
+        booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
+        mockBooking(booking);
+
+        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+                createRoomStayUpdateRequest(5L, 2L, today.plusDays(12), today.plusDays(20))
+        ));
+
+//        when and then
+        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+                .isInstanceOf(BookingValidationException.class)
+                .satisfies(ex ->{
+                    BookingValidationException bookingEx = (BookingValidationException) ex;
+                    assertThat(bookingEx.getBadStatusDetails())
+                            .extracting(RoomStayBadStatusDetails::id, RoomStayBadStatusDetails::status, RoomStayBadStatusDetails::errorCode)
+                            .containsExactlyInAnyOrder(tuple(5L, RoomStayStatus.ACTIVE, RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED));
+
                 });
-
     }
 
-
-    private Map<Long, BigDecimal> mapStaysPrices(List<RoomStayDetails> stays) {
-        Map<Long, BigDecimal> roomsPricePerNight = new HashMap<>();
-
-        for (RoomStayDetails stay : stays) {
-            roomsPricePerNight.put(stay.roomId(), stay.pricePerNight());
-        }
-        return roomsPricePerNight;
-    }
-
-
-    private void setUpEmployee() {
+    private Employee mockEmployee() {
         Employee employee = EmployeeTestUtils
                 .aValidEmployee(PersonTestUtils.aValidPerson().id(employeeId).build())
                 .id(employeeId)
                 .build();
 
         when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(employee));
+        return employee;
     }
 
-    private void setUpCustomer() {
-        setUpCustomerWithDiscount(BigDecimal.valueOf(0.13));
+    private void mockCustomer() {
+        mockCustomer(BigDecimal.valueOf(0.13));
     }
 
-    private void setUpCustomerWithDiscount(BigDecimal discount) {
+    private void mockCustomer(BigDecimal discount) {
 
         Customer customer = CustomerTestUtils
                 .aValidCustomer(PersonTestUtils.aValidPerson().id(customerId).build(),
@@ -568,7 +367,7 @@ class BookingServiceTest {
                 .thenReturn(Optional.of(customer));
     }
 
-    private void setUpCorrectBooking() {
+    private void mockBooking() {
         when(bookingRepository.save(any(Booking.class)))
                 .thenAnswer(invocation -> {
                     Booking bookingArg = invocation.getArgument(0);
@@ -577,46 +376,47 @@ class BookingServiceTest {
                 });
     }
 
-    private Room setUpRoomWithName(Long id, String name) {
+    private void mockBooking(Booking booking) {
+        when(bookingRepository.findById(booking.getId()))
+                .thenReturn(Optional.of(booking));
+    }
+
+    private Room mockRoom(Long id) {
         Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build())
-                .id(id)
-                .name(name)
-                .build();
+                                 .id(id)
+                                 .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
         return room;
     }
 
-    private Room setUpRoomWithPrice(Long id, BigDecimal pricePerNight) {
+    private Room mockRoom(Long id, String name) {
+        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().build())
+                                 .id(id)
+                                 .name(name)
+                                 .build();
+        when(roomRepository.findById(id)).thenReturn(Optional.of(room));
+        return room;
+    }
+
+    private Room mockRoom(Long id, BigDecimal pricePerNight) {
         Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
-                .id(id)
-                .build();
+                                 .id(id)
+                                 .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
         return room;
     }
 
-    private BookingCreateRequest createBookingRequest(List<SingleRoomStayRequest> stayRequests) {
-        return new BookingCreateRequest(
-                customerId,
-                employeeId,
-                stayRequests
-        );
-    }
-
-    private SingleRoomStayRequest createSingleRoomStayRequest(Long roomId, LocalDate from, LocalDate to) {
-        return new SingleRoomStayRequest(
+    private void mockRoomStayConflicts(Long bookingId, Long roomId, LocalDate from, LocalDate to, RoomStay... conflicts) {
+        when(roomStayRepository.getConflicts(
                 roomId,
+                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
                 from,
                 to,
-                null
-        );
+                bookingId
+        )).thenReturn(List.of(conflicts));
     }
 
-    private SingleRoomStayRequest createSingleRoomStayRequestWithPrice(Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
-        return new SingleRoomStayRequest(
-                roomId,
-                from,
-                to,
-                pricePerNight
-        );
+    private RoomStay buildStay(Long id, Room room, Employee employee, LocalDate from, LocalDate to){
+        return BookingTestUtils.aValidRoomStay(null, room,employee).id(id).activeFrom(from).activeTo(to).build();
     }
 }

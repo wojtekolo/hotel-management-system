@@ -1,11 +1,8 @@
 package io.github.wojtekolo.hotelsystem.common;
 
 import io.github.wojtekolo.hotelsystem.booking.BookingConflictResponse;
-import io.github.wojtekolo.hotelsystem.booking.BookingRequestConflictResponse;
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.BookingRequestConflictException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
-import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
+import io.github.wojtekolo.hotelsystem.booking.BookingValidationResponse;
+import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -79,11 +76,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(BookingRequestConflictException.class)
-    public ResponseEntity<BookingRequestConflictResponse> handleBookingConflict(BookingRequestConflictException ex){
-        var response = new BookingRequestConflictResponse(
+    @ExceptionHandler(BookingValidationException.class)
+    public ResponseEntity<BookingValidationResponse> handleBookingConflict(BookingValidationException ex){
+        var response = new BookingValidationResponse(
                 ex.getMessage(),
-                ex.getConflicts()
+                ex.getExternalConflicts(),
+                ex.getInternalConflicts(),
+                ex.getBadStatusDetails()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
