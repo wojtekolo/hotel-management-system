@@ -1,0 +1,13 @@
+.git/
+.github/
+.idea/
+.mvn/
+target/
+.dockerignore
+.gitattributes
+.gitignore
+docker-compose.yml
+Dockerfile
+hotel-management-system.iml
+mvnw
+mvnw.cmd
