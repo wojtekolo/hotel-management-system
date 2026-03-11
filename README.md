@@ -76,8 +76,8 @@ Interactive API documentation is available via Swagger UI. Once the container is
     {
       "id": 0,
       "roomId": 2,
-      "from": "2028-03-15",
-      "to": "2028-03-20",
+      "from": "2027-03-15",
+      "to": "2027-03-20",
       "pricePerNight": 0
     }
   ]
