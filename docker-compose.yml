@@ -9,12 +9,19 @@ services:
       - POSTGRES_PASSWORD=secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "hotel_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 1s
   backend:
     build: .
     ports:
       - "8080:8080"
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/hotel_system
       - SPRING_DATASOURCE_USERNAME=admin
