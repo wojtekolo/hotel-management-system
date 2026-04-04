@@ -6,7 +6,7 @@ import java.util.List;
 public record ExternalRoomStayConflict(
         Long roomId,
         String roomName,
-        Long roomStayid,
+        Long roomStayId,
         LocalDate from,
         LocalDate to,
         List<RoomStayConflictDetails> roomConflictsDetails
