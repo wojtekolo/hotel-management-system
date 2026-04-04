@@ -1,7 +1,9 @@
 package io.github.wojtekolo.hotelsystem.common;
 
-import io.github.wojtekolo.hotelsystem.booking.BookingConflictResponse;
-import io.github.wojtekolo.hotelsystem.booking.BookingValidationResponse;
+import io.github.wojtekolo.hotelsystem.booking.api.BookingConflictResponse;
+import io.github.wojtekolo.hotelsystem.booking.api.BookingValidationResponse;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingConflictException;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

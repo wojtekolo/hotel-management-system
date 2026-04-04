@@ -1,7 +1,10 @@
 package io.github.wojtekolo.hotelsystem.customer;
 
-import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.person.model.Person;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
+import io.github.wojtekolo.hotelsystem.customer.model.Customer;
+import io.github.wojtekolo.hotelsystem.customer.model.LoyaltyStatus;
+import io.github.wojtekolo.hotelsystem.customer.model.LoyaltyStatusName;
 
 import java.math.BigDecimal;
 

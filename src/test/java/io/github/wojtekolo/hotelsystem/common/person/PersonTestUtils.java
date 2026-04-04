@@ -1,5 +1,7 @@
 package io.github.wojtekolo.hotelsystem.common.person;
 
+import io.github.wojtekolo.hotelsystem.person.model.Person;
+
 import java.time.LocalDate;
 
 public class PersonTestUtils {
