@@ -5,11 +5,11 @@ import io.github.wojtekolo.hotelsystem.booking.api.BookingUpdateRequest;
 import io.github.wojtekolo.hotelsystem.booking.api.RoomStayCreateRequest;
 import io.github.wojtekolo.hotelsystem.booking.api.RoomStayUpdateRequest;
 import io.github.wojtekolo.hotelsystem.booking.model.*;
-import io.github.wojtekolo.hotelsystem.customer.Customer;
+import io.github.wojtekolo.hotelsystem.customer.model.Customer;
 import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;
-import io.github.wojtekolo.hotelsystem.employee.Employee;
+import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
-import io.github.wojtekolo.hotelsystem.room.Room;
+import io.github.wojtekolo.hotelsystem.room.model.Room;
 import io.github.wojtekolo.hotelsystem.room.RoomTestUtils;
 
 import java.math.BigDecimal;

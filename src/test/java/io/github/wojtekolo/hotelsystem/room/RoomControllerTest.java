@@ -2,7 +2,13 @@ package io.github.wojtekolo.hotelsystem.room;
 
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
-import io.github.wojtekolo.hotelsystem.room.dtos.*;
+import io.github.wojtekolo.hotelsystem.room.api.RoomController;
+import io.github.wojtekolo.hotelsystem.room.api.RoomCreateRequest;
+import io.github.wojtekolo.hotelsystem.room.api.RoomDetails;
+import io.github.wojtekolo.hotelsystem.room.api.RoomListItem;
+import io.github.wojtekolo.hotelsystem.room.model.LifecycleStatus;
+import io.github.wojtekolo.hotelsystem.room.model.OperationalStatus;
+import io.github.wojtekolo.hotelsystem.room.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

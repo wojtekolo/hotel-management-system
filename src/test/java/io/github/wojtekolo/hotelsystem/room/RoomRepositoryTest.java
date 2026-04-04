@@ -1,6 +1,11 @@
 package io.github.wojtekolo.hotelsystem.room;
 
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomListItem;
+import io.github.wojtekolo.hotelsystem.room.api.RoomListItem;
+import io.github.wojtekolo.hotelsystem.room.model.LifecycleStatus;
+import io.github.wojtekolo.hotelsystem.room.model.OperationalStatus;
+import io.github.wojtekolo.hotelsystem.room.model.Room;
+import io.github.wojtekolo.hotelsystem.room.model.RoomType;
+import io.github.wojtekolo.hotelsystem.room.persistence.RoomRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;

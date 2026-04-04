@@ -5,8 +5,8 @@ import io.github.wojtekolo.hotelsystem.booking.api.RoomStayConflictDetails;
 import io.github.wojtekolo.hotelsystem.booking.api.RoomStayDetails;
 import io.github.wojtekolo.hotelsystem.booking.model.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
-import io.github.wojtekolo.hotelsystem.customer.CustomerMapper;
-import io.github.wojtekolo.hotelsystem.employee.EmployeeMapper;
+import io.github.wojtekolo.hotelsystem.customer.service.CustomerMapper;
+import io.github.wojtekolo.hotelsystem.employee.service.EmployeeMapper;
 import org.mapstruct.*;
 
 import java.math.BigDecimal;

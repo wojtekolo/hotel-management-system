@@ -1,7 +1,11 @@
 package io.github.wojtekolo.hotelsystem.room;
 
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomDetails;
-import io.github.wojtekolo.hotelsystem.room.dtos.RoomTypeDto;
+import io.github.wojtekolo.hotelsystem.room.api.RoomDetails;
+import io.github.wojtekolo.hotelsystem.room.api.RoomTypeDto;
+import io.github.wojtekolo.hotelsystem.room.model.LifecycleStatus;
+import io.github.wojtekolo.hotelsystem.room.model.OperationalStatus;
+import io.github.wojtekolo.hotelsystem.room.model.Room;
+import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 
 import java.math.BigDecimal;
 
@@ -9,22 +13,22 @@ public class RoomTestUtils {
     private static int counter = 100;
     public static Room.RoomBuilder aValidRoom(RoomType type) {
         return Room.builder()
-                .name(String.valueOf(counter++))
-                .floor(0)
-                .description("Room description")
-                .type(type)
-                .lifecycleStatus(LifecycleStatus.ACTIVE)
-                .operationalStatus(OperationalStatus.CLEAN);
+                   .name(String.valueOf(counter++))
+                   .floor(0)
+                   .description("Room description")
+                   .type(type)
+                   .lifecycleStatus(LifecycleStatus.ACTIVE)
+                   .operationalStatus(OperationalStatus.CLEAN);
     }
     public static Room.RoomBuilder aValidRoom() {
         return aValidRoom(aValidType().build());
     }
     public static RoomType.RoomTypeBuilder aValidType(){
         return RoomType.builder()
-                .name(String.valueOf(counter++))
-                .pricePerNight(BigDecimal.valueOf(0))
-                .description("Type description")
-                .capacity(0);
+                       .name(String.valueOf(counter++))
+                       .pricePerNight(BigDecimal.valueOf(0))
+                       .description("Type description")
+                       .capacity(0);
     }
     public static RoomDetails aValidRoomDetails(){
         RoomTypeDto roomTypeDto = new RoomTypeDto(

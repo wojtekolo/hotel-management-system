@@ -1,8 +1,8 @@
 package io.github.wojtekolo.hotelsystem.booking.model;
 
-import io.github.wojtekolo.hotelsystem.employee.Employee;
+import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.guest.Guest;
-import io.github.wojtekolo.hotelsystem.room.Room;
+import io.github.wojtekolo.hotelsystem.room.model.Room;
 import jakarta.persistence.*;
 import lombok.*;
 
