@@ -1,5 +1,15 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.service;
 
+import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
+import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
+import io.github.wojtekolo.hotelsystem.booking.api.*;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingErrorCode;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingStatusException;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
+import io.github.wojtekolo.hotelsystem.booking.exception.RoomStayErrorCode;
+import io.github.wojtekolo.hotelsystem.booking.model.Booking;
+import io.github.wojtekolo.hotelsystem.booking.model.BookingStatus;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
 import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import io.github.wojtekolo.hotelsystem.customer.Customer;
 import io.github.wojtekolo.hotelsystem.customer.CustomerRepository;

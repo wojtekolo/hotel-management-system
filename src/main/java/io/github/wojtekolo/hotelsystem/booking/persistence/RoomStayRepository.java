@@ -1,5 +1,7 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.persistence;
 
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

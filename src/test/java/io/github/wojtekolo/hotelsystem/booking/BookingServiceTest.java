@@ -1,5 +1,20 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
+import io.github.wojtekolo.hotelsystem.booking.api.BookingCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.BookingDetails;
+import io.github.wojtekolo.hotelsystem.booking.api.RoomStayBadStatusDetails;
+import io.github.wojtekolo.hotelsystem.booking.api.RoomStayDetails;
+import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
+import io.github.wojtekolo.hotelsystem.booking.exception.RoomStayErrorCode;
+import io.github.wojtekolo.hotelsystem.booking.model.Booking;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
+import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
+import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
+import io.github.wojtekolo.hotelsystem.booking.service.BookingMapper;
+import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
+import io.github.wojtekolo.hotelsystem.booking.service.BookingValidator;
+import io.github.wojtekolo.hotelsystem.booking.service.BookingMapperImpl;
 import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.*;
@@ -13,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

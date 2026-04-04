@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.model;
 
 import io.github.wojtekolo.hotelsystem.employee.Employee;
 import io.github.wojtekolo.hotelsystem.guest.Guest;

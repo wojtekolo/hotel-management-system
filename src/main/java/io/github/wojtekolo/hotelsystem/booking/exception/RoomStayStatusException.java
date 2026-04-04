@@ -1,7 +1,6 @@
-package io.github.wojtekolo.hotelsystem.common.exceptions;
+package io.github.wojtekolo.hotelsystem.booking.exception;
 
-import io.github.wojtekolo.hotelsystem.booking.BookingErrorCode;
-import io.github.wojtekolo.hotelsystem.booking.RoomStayBadStatusDetails;
+import io.github.wojtekolo.hotelsystem.booking.api.RoomStayBadStatusDetails;
 import lombok.Getter;
 
 import java.util.List;

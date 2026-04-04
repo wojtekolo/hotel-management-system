@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.exception;
 
 public enum BookingErrorCode {
     ONLY_PLANNED_STAY_CAN_BE_CANCELLED,

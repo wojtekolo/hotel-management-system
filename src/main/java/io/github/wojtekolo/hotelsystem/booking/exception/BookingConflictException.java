@@ -1,6 +1,6 @@
-package io.github.wojtekolo.hotelsystem.common.exceptions;
+package io.github.wojtekolo.hotelsystem.booking.exception;
 
-import io.github.wojtekolo.hotelsystem.booking.ExternalRoomStayConflict;
+import io.github.wojtekolo.hotelsystem.booking.api.ExternalRoomStayConflict;
 import lombok.Getter;
 
 import java.util.List;

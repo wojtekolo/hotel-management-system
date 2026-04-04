@@ -1,5 +1,11 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.service;
 
+import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
+import io.github.wojtekolo.hotelsystem.booking.api.ExternalRoomStayConflict;
+import io.github.wojtekolo.hotelsystem.booking.api.InternalRoomStayConflict;
+import io.github.wojtekolo.hotelsystem.booking.api.RoomStayConflictDetails;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.room.Room;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

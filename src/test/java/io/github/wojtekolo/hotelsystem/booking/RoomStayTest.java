@@ -1,5 +1,7 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.room.Room;
 import io.github.wojtekolo.hotelsystem.room.RoomTestUtils;
 import org.junit.jupiter.api.Test;

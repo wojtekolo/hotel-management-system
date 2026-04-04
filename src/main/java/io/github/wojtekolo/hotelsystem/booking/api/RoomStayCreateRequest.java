@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.api;
 
 import lombok.Builder;
 

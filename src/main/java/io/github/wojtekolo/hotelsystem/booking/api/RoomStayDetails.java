@@ -1,5 +1,7 @@
-package io.github.wojtekolo.hotelsystem.booking;
+package io.github.wojtekolo.hotelsystem.booking.api;
 
+
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
