@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.customer.api;
 
-import io.github.wojtekolo.hotelsystem.common.person.PersonCreateRequest;
+import io.github.wojtekolo.hotelsystem.person.api.PersonCreateRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

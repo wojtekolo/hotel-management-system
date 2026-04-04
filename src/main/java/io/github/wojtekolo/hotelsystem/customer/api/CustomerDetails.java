@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.customer.api;
 
-import io.github.wojtekolo.hotelsystem.common.person.PersonDetails;
+import io.github.wojtekolo.hotelsystem.person.api.PersonDetails;
 import io.github.wojtekolo.hotelsystem.customer.model.LoyaltyStatus;
 
 public record CustomerDetails(

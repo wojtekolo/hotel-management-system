@@ -1,4 +1,4 @@
-package io.github.wojtekolo.hotelsystem.common.person;
+package io.github.wojtekolo.hotelsystem.person.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Past;

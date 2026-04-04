@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.employee.model;
 
-import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.person.model.Person;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;

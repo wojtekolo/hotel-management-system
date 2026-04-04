@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.guest;
 
-import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.person.model.Person;
 import jakarta.persistence.*;
 import lombok.Getter;
 

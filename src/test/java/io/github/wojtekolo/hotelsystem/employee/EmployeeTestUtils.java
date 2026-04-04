@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.employee;
 
-import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.person.model.Person;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.employee.model.EmployeeRole;

@@ -4,7 +4,7 @@ import io.github.wojtekolo.hotelsystem.booking.model.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
-import io.github.wojtekolo.hotelsystem.common.person.Person;
+import io.github.wojtekolo.hotelsystem.person.model.Person;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
 import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;

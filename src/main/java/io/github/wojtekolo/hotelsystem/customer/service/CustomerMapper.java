@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.customer.service;
 
-import io.github.wojtekolo.hotelsystem.common.person.PersonMapper;
+import io.github.wojtekolo.hotelsystem.person.service.PersonMapper;
 import io.github.wojtekolo.hotelsystem.customer.api.CustomerCreateRequest;
 import io.github.wojtekolo.hotelsystem.customer.api.CustomerDetails;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
