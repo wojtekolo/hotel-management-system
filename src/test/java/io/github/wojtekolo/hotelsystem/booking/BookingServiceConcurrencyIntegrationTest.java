@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.sql.init.mode=never",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-public class BookinServiceConcurrencyIT {
+public class BookingServiceConcurrencyIntegrationTest {
     @Autowired
     BookingService bookingService;
     @Autowired

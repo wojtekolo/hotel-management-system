@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.tuple;
         "spring.sql.init.mode=never",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-class BookingServiceIT {
+class BookingServiceIntegrationTest {
 
     private final LocalDate today = LocalDate.now();
 
