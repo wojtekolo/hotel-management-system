@@ -66,6 +66,8 @@ class BookingServiceIT {
         BookingDetails result = bookingService.addBooking(bookingCreateRequest);
 
 //        then
+        entityManager.flush();
+        entityManager.clear();
         Booking savedBooking = bookingRepository.findById(result.id())
                                                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
 
@@ -150,6 +152,8 @@ class BookingServiceIT {
                 .activeFrom(today.plusDays(10)).activeTo(today.plusDays(15)).build();
         booking.addStay(stay);
         entityManager.persist(booking);
+        entityManager.flush();
+        entityManager.clear();
 
         BookingUpdateRequest updateRequest = createBookingUpdateRequest(
                 booking.getId(),
@@ -164,11 +168,14 @@ class BookingServiceIT {
         BookingDetails result = bookingService.updateBooking(updateRequest);
 
 //        then
+        entityManager.flush();
+        entityManager.clear();
+        assertThat(result.id()).isEqualTo(booking.getId());
         Booking savedBooking = bookingRepository.findById(result.id())
                                                 .orElseThrow(() -> new AssertionError("Booking not found in database"));
 
-        assertThat(result.stays().getFirst().activeFrom()).isEqualTo(today.plusDays(11));
-        assertThat(result.stays().getFirst().activeTo()).isEqualTo(today.plusDays(16));
+        assertThat(savedBooking.getStays().getFirst().getActiveFrom()).isEqualTo(today.plusDays(11));
+        assertThat(savedBooking.getStays().getFirst().getActiveTo()).isEqualTo(today.plusDays(16));
     }
 
 
