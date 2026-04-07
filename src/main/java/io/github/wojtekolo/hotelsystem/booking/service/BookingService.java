@@ -33,12 +33,17 @@ public class BookingService {
     private final EmployeeRepository employeeRepository;
     private final RoomRepository roomRepository;
     private final CustomerRepository customerRepository;
-    private final RoomStayRepository roomStayRepository;
     private final BookingRepository bookingRepository;
     private final BookingValidator bookingValidator;
 
     @Transactional
     public BookingDetails addBooking(BookingCreateRequest request) {
+        request.stays().stream()
+               .map(RoomStayCreateRequest::roomId)
+               .distinct()
+               .sorted()
+               .forEach(roomRepository::findByIdWithLock);
+
         Employee employee = findEmployee(request.employeeId());
         Customer customer = findCustomer(request.customerId());
         Booking booking = Booking.createDefault(customer, employee);
@@ -57,17 +62,33 @@ public class BookingService {
 
     @Transactional
     public BookingDetails updateBooking(BookingUpdateRequest request) {
-        Employee employee = findEmployee(request.employeeId());
-
         Booking booking = findBooking(request.bookingId());
         if (booking.getStatus() == BookingStatus.CANCELLED)
             throw new BookingStatusException("Cannot edit cancelled booking", BookingErrorCode.BOOKING_CANCELLED_CANNOT_BE_EDITED, booking.getId());
 
+        Set<Long> roomsToLock = new HashSet<>();
+
+        request.stays().stream()
+               .map(RoomStayUpdateRequest::roomId)
+               .distinct()
+               .sorted()
+               .forEach(roomsToLock::add);
+
+        booking.getStays().stream()
+               .map(RoomStay::getRoom)
+               .map(Room::getId)
+               .distinct()
+               .sorted()
+               .forEach(roomsToLock::add);
+
+        roomsToLock.stream().sorted().forEach(roomRepository::findByIdWithLock);
+
+
+        Employee employee = findEmployee(request.employeeId());
 
         updateRoomStays(booking, request.stays(), employee);
-
-
         booking = bookingRepository.save(booking);
+
         return bookingMapper.toBookingDetails(booking);
     }
 
@@ -130,7 +151,7 @@ public class BookingService {
         newStays.stream()
                 .filter(req -> !existingStayIds.contains(req.id()))
                 .forEach(req ->
-                            createAndAddPlannedStay(booking, employee, req.roomId(), req.from(), req.to(), req.pricePerNight())
+                        createAndAddPlannedStay(booking, employee, req.roomId(), req.from(), req.to(), req.pricePerNight())
                 );
     }
 
@@ -147,8 +168,7 @@ public class BookingService {
     }
 
 
-
-    private RoomStayBadStatusDetails updateRoom(RoomStay roomStay, Long newRoomId){
+    private RoomStayBadStatusDetails updateRoom(RoomStay roomStay, Long newRoomId) {
         try {
             Room newRoom = roomRepository.findById(newRoomId).orElseThrow(NoSuchElementException::new);
             if (!roomStay.tryUpdateRoom(newRoom)) {
@@ -162,37 +182,33 @@ public class BookingService {
         return null;
     }
 
-    private RoomStayBadStatusDetails updateStartDate(RoomStay roomStay, LocalDate newFrom){
-        if (roomStay.getActiveFrom().equals(newFrom)){
+    private RoomStayBadStatusDetails updateStartDate(RoomStay roomStay, LocalDate newFrom) {
+        if (roomStay.getActiveFrom().equals(newFrom)) {
             return null;
-        }
-        else if (newFrom.isBefore(LocalDate.now())){
+        } else if (newFrom.isBefore(LocalDate.now())) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
                     RoomStayErrorCode.CANNOT_SET_START_DATE_IN_THE_PAST);
-        }
-        else if (!roomStay.tryUpdateActiveFrom(newFrom)) {
+        } else if (!roomStay.tryUpdateActiveFrom(newFrom)) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
                     RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_START_DATE_EDITED);
         }
         return null;
     }
 
-    private RoomStayBadStatusDetails updateEndDate(RoomStay roomStay, LocalDate newTo){
-        if (roomStay.getActiveTo().equals(newTo)){
+    private RoomStayBadStatusDetails updateEndDate(RoomStay roomStay, LocalDate newTo) {
+        if (roomStay.getActiveTo().equals(newTo)) {
             return null;
-        }
-        else if (newTo.isBefore(LocalDate.now())){
+        } else if (newTo.isBefore(LocalDate.now())) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
                     RoomStayErrorCode.CANNOT_SET_END_DATE_IN_THE_PAST);
-        }
-        else if (!roomStay.tryUpdateActiveTo(newTo)) {
+        } else if (!roomStay.tryUpdateActiveTo(newTo)) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
                     RoomStayErrorCode.ONLY_PLANNED_OR_ACTIVE_STAY_CAN_HAVE_END_DATE_EDITED);
         }
         return null;
     }
 
-    private RoomStayBadStatusDetails updatePricePerNight(RoomStay roomStay, BigDecimal pricePerNight){
+    private RoomStayBadStatusDetails updatePricePerNight(RoomStay roomStay, BigDecimal pricePerNight) {
         if (!roomStay.tryEditPrice(pricePerNight)) {
             return new RoomStayBadStatusDetails(roomStay.getId(), roomStay.getStatus(),
                     RoomStayErrorCode.ONLY_PLANNED_STAY_CAN_HAVE_PRICE_EDITED);
