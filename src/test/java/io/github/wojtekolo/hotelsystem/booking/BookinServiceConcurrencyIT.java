@@ -16,9 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,9 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
-import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.createRoomStayCreateRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -37,8 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 public class BookinServiceConcurrencyIT {
-    private final LocalDate today = LocalDate.now();
-
     @Autowired
     BookingService bookingService;
     @Autowired
@@ -76,7 +70,7 @@ public class BookinServiceConcurrencyIT {
         entityManager.clear();
 
 //        when
-        try (ExecutorService executor = Executors.newFixedThreadPool(requestCount)){
+        try (ExecutorService executor = Executors.newFixedThreadPool(requestCount)) {
             for (BookingCreateRequest request : requests) {
                 executor.execute(() -> {
                     try {
