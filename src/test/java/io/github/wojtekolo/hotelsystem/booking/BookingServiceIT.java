@@ -10,16 +10,10 @@ import io.github.wojtekolo.hotelsystem.booking.model.PaymentStatus;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
 import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
-import io.github.wojtekolo.hotelsystem.person.model.Person;
-import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
-import io.github.wojtekolo.hotelsystem.customer.*;
+import io.github.wojtekolo.hotelsystem.common.TestDataFactory;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
-import io.github.wojtekolo.hotelsystem.customer.model.LoyaltyStatus;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
-import io.github.wojtekolo.hotelsystem.employee.EmployeeTestUtils;
-import io.github.wojtekolo.hotelsystem.room.*;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
-import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -54,12 +48,15 @@ class BookingServiceIT {
     @Autowired
     EntityManager entityManager;
 
+    @Autowired
+    TestDataFactory data;
+
     @Test
     public void should_persist_single_stay() {
 //        given
-        Room room = prepareRoom();
-        Employee employee = prepareEmployee();
-        Customer customer = prepareCustomer();
+        Room room = data.prepareRoom();
+        Employee employee = data.prepareEmployee();
+        Customer customer = data.prepareCustomer();
 
         var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
                 createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))
@@ -90,10 +87,10 @@ class BookingServiceIT {
     @Test
     public void should_calculate_correct_cost_when_default_price_and_discount() {
 //        given
-        Room room1 = prepareRoom(BigDecimal.valueOf(100));
-        Room room2 = prepareRoom(BigDecimal.valueOf(10));
-        Employee employee = prepareEmployee();
-        Customer customer = prepareCustomer(BigDecimal.valueOf(0.5));
+        Room room1 = data.prepareRoom(BigDecimal.valueOf(100));
+        Room room2 = data.prepareRoom(BigDecimal.valueOf(10));
+        Employee employee = data.prepareEmployee();
+        Customer customer = data.prepareCustomer(BigDecimal.valueOf(0.5));
 
         var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
                 createRoomStayCreateRequest(room1.getId(), today.plusDays(5), today.plusDays(10)),
@@ -117,10 +114,10 @@ class BookingServiceIT {
     @Test
     public void should_calculate_correct_cost_when_custom_price() {
 //        given
-        Room room1 = prepareRoom(BigDecimal.valueOf(100));
-        Room room2 = prepareRoom(BigDecimal.valueOf(10));
-        Employee employee = prepareEmployee();
-        Customer customer = prepareCustomer(BigDecimal.valueOf(0.5));
+        Room room1 = data.prepareRoom(BigDecimal.valueOf(100));
+        Room room2 = data.prepareRoom(BigDecimal.valueOf(10));
+        Employee employee = data.prepareEmployee();
+        Customer customer = data.prepareCustomer(BigDecimal.valueOf(0.5));
 
         var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
                 createRoomStayCreateRequest(room1.getId(), today.plusDays(5), today.plusDays(10), BigDecimal.valueOf(30)),
@@ -144,9 +141,9 @@ class BookingServiceIT {
     @Test
     public void should_update_ignoring_self_collision() {
 //        given
-        Room room = prepareRoom();
-        Employee employee = prepareEmployee();
-        Customer customer = prepareCustomer();
+        Room room = data.prepareRoom();
+        Employee employee = data.prepareEmployee();
+        Customer customer = data.prepareCustomer();
 
         Booking booking = aValidBooking(customer, employee).build();
         RoomStay stay = aValidRoomStay(booking, room, employee)
@@ -174,40 +171,5 @@ class BookingServiceIT {
         assertThat(result.stays().getFirst().activeTo()).isEqualTo(today.plusDays(16));
     }
 
-    private Room prepareRoom(BigDecimal pricePerNight) {
-        RoomType roomType = RoomTestUtils.aValidType().pricePerNight(pricePerNight).build();
-        entityManager.persist(roomType);
-        Room room = RoomTestUtils.aValidRoom(roomType).build();
-        entityManager.persist(room);
-        return room;
-    }
 
-    private Room prepareRoom() {
-        return prepareRoom(BigDecimal.valueOf(15));
-    }
-
-    private Customer prepareCustomer() {
-        return prepareCustomer(BigDecimal.ZERO);
-    }
-
-    private Customer prepareCustomer(BigDecimal discount) {
-        Person person = PersonTestUtils.aValidPerson().build();
-        entityManager.persist(person);
-
-        LoyaltyStatus loyaltyStatus = CustomerTestUtils.aValidLoyaltyStatus().discount(discount).build();
-        entityManager.persist(loyaltyStatus);
-
-        Customer customer = CustomerTestUtils.aValidCustomer(person, loyaltyStatus).build();
-        entityManager.persist(customer);
-        return customer;
-    }
-
-    private Employee prepareEmployee() {
-        Person person = PersonTestUtils.aValidPerson().build();
-        entityManager.persist(person);
-
-        Employee employee = EmployeeTestUtils.aValidEmployee(person).build();
-        entityManager.persist(employee);
-        return employee;
-    }
 }
