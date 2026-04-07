@@ -1,5 +1,10 @@
 package io.github.wojtekolo.hotelsystem.common;
 
+import io.github.wojtekolo.hotelsystem.booking.api.BookingCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.BookingUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.RoomStayUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.model.Booking;
+import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
@@ -14,14 +19,23 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.*;
 
 @Component
 @Transactional
 @RequiredArgsConstructor
 public class TestDataFactory {
+    private final LocalDate today = LocalDate.now();
     private final EntityManager entityManager;
+    private final TransactionTemplate transactionTemplate;
 
     public Room prepareRoom(BigDecimal pricePerNight) {
         RoomType roomType = RoomTestUtils.aValidType().pricePerNight(pricePerNight).build();
@@ -58,5 +72,34 @@ public class TestDataFactory {
         Employee employee = EmployeeTestUtils.aValidEmployee(person).build();
         entityManager.persist(employee);
         return employee;
+    }
+
+    public List<BookingUpdateRequest> prepareCollidingUpdateRequests(int count, Room targetRoom, Customer customer, Employee employee) {
+        List<BookingUpdateRequest> requests = new ArrayList<>();
+        IntStream.range(0, count).forEach(i -> {
+
+            Room room = prepareRoom();
+            Booking booking = aValidBooking(customer, employee).build();
+            RoomStay stay = aValidRoomStay(booking, room, employee)
+                    .activeFrom(today.plusDays(10)).activeTo(today.plusDays(15)).build();
+            booking.addStay(stay);
+
+            entityManager.persist(booking);
+
+            requests.add(new BookingUpdateRequest(booking.getId(), employee.getId(), List.of(
+                    new RoomStayUpdateRequest(stay.getId(), targetRoom.getId(), stay.getActiveFrom(), stay.getActiveTo(), null)
+            )));
+
+        });
+        return requests;
+    }
+
+    public List<BookingCreateRequest> prepareCollidingCreateRequests(int count, Room room, Customer customer, Employee employee) {
+        return IntStream.range(0, count)
+                        .mapToObj(
+                                i -> new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
+                                        createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))))
+                        )
+                        .toList();
     }
 }
