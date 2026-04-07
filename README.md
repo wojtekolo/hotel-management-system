@@ -13,7 +13,9 @@ A system for managing hotel bookings, rooms and employees.
 
 ## Key Features
 * **Multi-room booking system:** Supports bookings for multiple rooms across various stay periods within a single transaction.
-* **Collision prevention logic:** Prevents overlapping bookings for the same room.
+* **Collision prevention logic:** Prevents overlapping bookings for the same room by validating each request.
+* **Concurrency management**: Handles concurrent requests using pessimistic locking on the `Room` entity, ensuring only one
+    transaction at a time can create or update a booking for a specific room.
 * **Automatic price calculation:** Calculates the total cost based on the room's base price and customer's loyalty status, with support for manual price overrides.
 * **Role management:** Uses the Shared Primary Key pattern to consolidate roles and eliminate data redundancy.
 * **Booking lifecycle management:** Manages booking state transitions and validates update requests.
