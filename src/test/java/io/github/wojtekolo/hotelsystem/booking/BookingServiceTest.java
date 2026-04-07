@@ -91,7 +91,6 @@ class BookingServiceTest {
                 employeeRepository,
                 roomRepository,
                 customerRepository,
-                roomStayRepository,
                 bookingRepository,
                 bookingValidator
         );
