@@ -8,8 +8,14 @@ import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
 import io.github.wojtekolo.hotelsystem.common.TestDataFactory;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
+import io.github.wojtekolo.hotelsystem.customer.persistence.CustomerRepository;
+import io.github.wojtekolo.hotelsystem.customer.persistence.LoyaltyStatusRepository;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
+import io.github.wojtekolo.hotelsystem.employee.persistence.EmployeeRepository;
+import io.github.wojtekolo.hotelsystem.person.persistence.PersonRepository;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
+import io.github.wojtekolo.hotelsystem.room.persistence.RoomRepository;
+import io.github.wojtekolo.hotelsystem.room.persistence.RoomTypeRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +46,18 @@ public class BookingServiceConcurrencyIntegrationTest {
     @Autowired
     private RoomStayRepository roomStayRepository;
     @Autowired
+    private CustomerRepository customerRepository;
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private LoyaltyStatusRepository loyaltyStatusRepository;
+    @Autowired
+    private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private RoomRepository roomRepository;
+    @Autowired
+    private EmployeeRepository employeeRepository;
+    @Autowired
     TestDataFactory data;
 
     @Autowired
@@ -49,6 +67,12 @@ public class BookingServiceConcurrencyIntegrationTest {
     void cleanUp() {
         roomStayRepository.deleteAll();
         bookingRepository.deleteAll();
+        employeeRepository.deleteAll();
+        customerRepository.deleteAll();
+        personRepository.deleteAll();
+        loyaltyStatusRepository.deleteAll();
+        roomRepository.deleteAll();
+        roomTypeRepository.deleteAll();
     }
 
     @Test
