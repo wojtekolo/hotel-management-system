@@ -26,4 +26,6 @@ public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
             """
     )
     List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo, Long excludedBookingID);
+
+    long countByRoomId(Long roomId);
 }
