@@ -43,7 +43,9 @@ Interactive API documentation is available via Swagger UI. Once the container is
 > **Note:** The database is populated with default data (`Room`, `RoomType`, `Customer`, `LoyaltyStatus`, `Employee`) on startup to speed up testing
 
 ### Example Request: Create a new `Booking`
-**POST** `/bookings`
+Request to create a new booking for a single room. A null value in customPricePerNight defaults to the room's current price.
+
+**POST** `/api/v1/bookings`
 
 ```json
 {
@@ -54,70 +56,11 @@ Interactive API documentation is available via Swagger UI. Once the container is
       "roomId": 1,
       "from": "2027-03-11",
       "to": "2027-03-15",
-      "customPricePerNight": 0
+      "customPricePerNight": null
     }
   ]
 }
 ```
-**Received response:**
-```json
-{
-   "id": 1,
-   "customerFullName": "Customer_name Customer_surname",
-   "customerPhone": "123123123",
-   "loyaltyDiscount": "0.00",
-   "createTime": "2026-04-03T08:36:26.987338306",
-   "totalCost": 0,
-   "createBy": "Employee_name Employee_surname",
-   "paymentStatus": "UNPAID",
-   "status": "PLANNED",
-   "stays": [
-      {
-         "id": 1,
-         "roomId": 1,
-         "roomName": "1",
-         "roomType": "Default room type",
-         "actualCheckIn": null,
-         "actualCheckOut": null,
-         "activeFrom": "2027-03-11",
-         "activeTo": "2027-03-15",
-         "pricePerNight": 0,
-         "totalCost": 0,
-         "status": "PLANNED",
-         "createBy": "Employee_name Employee_surname",
-         "checkInBy": null,
-         "checkOutBy": null
-      }
-   ]
-}
-```
-
-### Example Request: Update existing `Booking` (Add new `RoomStay`)
-**PUT** `/bookings/{id}`
-
-```json
-{
-  "bookingId": 1,
-  "employeeId": 2,
-  "stays": [
-    {
-      "id": 1,
-      "roomId": 1,
-      "from": "2027-03-11",
-      "to": "2027-03-15",
-      "pricePerNight": 0
-    },
-    {
-      "id": 0,
-      "roomId": 2,
-      "from": "2027-03-15",
-      "to": "2027-03-20",
-      "pricePerNight": 0
-    }
-  ]
-}
-```
-
 **Received response:**
 ```json
 {
@@ -125,8 +68,8 @@ Interactive API documentation is available via Swagger UI. Once the container is
   "customerFullName": "Customer_name Customer_surname",
   "customerPhone": "123123123",
   "loyaltyDiscount": "0.00",
-  "createTime": "2026-04-03T08:36:26.987338",
-  "totalCost": 0,
+  "createTime": "2026-04-08T13:24:44.873158038",
+  "totalCost": 400,
   "createBy": "Employee_name Employee_surname",
   "paymentStatus": "UNPAID",
   "status": "PLANNED",
@@ -140,8 +83,70 @@ Interactive API documentation is available via Swagger UI. Once the container is
       "actualCheckOut": null,
       "activeFrom": "2027-03-11",
       "activeTo": "2027-03-15",
-      "pricePerNight": 0,
-      "totalCost": 0,
+      "pricePerNight": 100,
+      "totalCost": 400,
+      "status": "PLANNED",
+      "createBy": "Employee_name Employee_surname",
+      "checkInBy": null,
+      "checkOutBy": null
+    }
+  ]
+}
+```
+
+### Example Request: Update existing `Booking` (Add new `RoomStay`)
+Using non-existent `RoomStay` ID (e.g. 0) results in creating a new one.
+This example also demonstrates a manual price override.
+In case of updating, `null` value doesn't change the current cost of specified `RoomStay`.
+
+**PUT** `/api/v1/bookings/1`
+
+```json
+{
+  "employeeId": 2,
+  "stays": [
+    {
+      "id": 1,
+      "roomId": 1,
+      "from": "2027-03-11",
+      "to": "2027-03-15",
+      "pricePerNight": null
+    },
+    {
+      "id": 0,
+      "roomId": 2,
+      "from": "2027-03-15",
+      "to": "2027-03-25",
+      "pricePerNight": 10
+    }
+  ]
+}
+```
+
+**Received response:**
+```json
+{
+  "id": 1,
+  "customerFullName": "Customer_name Customer_surname",
+  "customerPhone": "123123123",
+  "loyaltyDiscount": "0.00",
+  "createTime": "2026-04-08T13:27:13.514355",
+  "totalCost": 500,
+  "createBy": "Employee_name Employee_surname",
+  "paymentStatus": "UNPAID",
+  "status": "PLANNED",
+  "stays": [
+    {
+      "id": 1,
+      "roomId": 1,
+      "roomName": "1",
+      "roomType": "Default room type",
+      "actualCheckIn": null,
+      "actualCheckOut": null,
+      "activeFrom": "2027-03-11",
+      "activeTo": "2027-03-15",
+      "pricePerNight": 100,
+      "totalCost": 400,
       "status": "PLANNED",
       "createBy": "Employee_name Employee_surname",
       "checkInBy": null,
@@ -155,9 +160,9 @@ Interactive API documentation is available via Swagger UI. Once the container is
       "actualCheckIn": null,
       "actualCheckOut": null,
       "activeFrom": "2027-03-15",
-      "activeTo": "2027-03-20",
-      "pricePerNight": 0,
-      "totalCost": 0,
+      "activeTo": "2027-03-25",
+      "pricePerNight": 10,
+      "totalCost": 100,
       "status": "PLANNED",
       "createBy": "Employee_name Employee_surname",
       "checkInBy": null,
@@ -168,13 +173,17 @@ Interactive API documentation is available via Swagger UI. Once the container is
 ```
 
 ### Example Bad Request: Update a `Booking` with collisions
-**Database state:** planned `RoomStay` with id = 3 and `Booking` with id = 2 for `Room` with id = 1 for period:  03.16-03.20 \
-Request has internal conflict withing itself and external conflict with RoomStay with id =3 \
+**Database state:** planned `RoomStay` with id = 3 belonging to `Booking` with id = 2, planned for the `Room` with id = 1 for period:  2027-03-16 : 2027-03-20 \
+Request contains internal conflict within itself and external conflict with the existing RoomStay with id = 3. \
 \
-**PUT** `/bookings`
+The response consists of 3 sections:
+* External conflicts: List of existing `Roomstays` which conflict with requested `RoomStay`.
+* Internal conflicts: List of all conflicts in the request.
+* Bad status details: `RoomStays` that cannot be modified due to their current status (e.g. canceled). \
+\
+**PUT** `/api/v1/bookings/1`
 ```json
 {
-  "bookingId": 1,
   "employeeId": 2,
   "stays": [
     {
