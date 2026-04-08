@@ -1,7 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.service;
 
 import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
-import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.booking.api.*;
 import io.github.wojtekolo.hotelsystem.booking.exception.BookingErrorCode;
 import io.github.wojtekolo.hotelsystem.booking.exception.BookingStatusException;
@@ -90,6 +89,10 @@ public class BookingService {
         booking = bookingRepository.save(booking);
 
         return bookingMapper.toBookingDetails(booking);
+    }
+
+    public BookingDetails getBooking(Long bookingId){
+        return bookingMapper.toBookingDetails(findBooking(bookingId));
     }
 
     private void updateRoomStays(Booking booking, List<RoomStayUpdateRequest> newStays, Employee employee) {
