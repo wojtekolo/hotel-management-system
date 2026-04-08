@@ -35,7 +35,7 @@ class RoomControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @MockitoBean
     private RoomService roomService;
@@ -54,7 +54,7 @@ class RoomControllerTest {
         );
         given(roomService.getRooms(any())).willReturn(new SliceImpl<>(List.of(item)));
 
-        mockMvc.perform(get("/rooms/list")
+        mockMvc.perform(get("/api/v1/rooms")
                         .param("page", "0")
                         .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -68,7 +68,7 @@ class RoomControllerTest {
     void should_return_empty_slice_when_no_rooms() throws Exception {
         given(roomService.getRooms(any())).willReturn(new SliceImpl<>(List.of()));
 
-        mockMvc.perform(get("/rooms/list")
+        mockMvc.perform(get("/api/v1/rooms")
                         .param("page", "0")
                         .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -89,7 +89,7 @@ class RoomControllerTest {
         given(roomService.addRoom(any(RoomCreateRequest.class))).willThrow(new ResourceAlreadyExistsException("Room exists"));
 
 //        when and then
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isConflict());
@@ -106,7 +106,7 @@ class RoomControllerTest {
         given(roomService.addRoom(any(RoomCreateRequest.class))).willThrow(new ResourceNotFoundException("Room type doesn't exist"));
 
 //        when and then
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isNotFound());
@@ -115,7 +115,7 @@ class RoomControllerTest {
     @Test
     void should_return_bad_request_when_json_is_broken() throws Exception {
         String brokenJson = "{ \"name\": \"101\"";
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(brokenJson))
                 .andExpect(status().isBadRequest());
@@ -132,7 +132,7 @@ class RoomControllerTest {
                                     "typeId": "1"
                                 }
                         """;
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidTypeJson))
                 .andExpect(status().isBadRequest());
@@ -146,7 +146,7 @@ class RoomControllerTest {
                 "",
                 1L
         );
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isBadRequest());
@@ -167,11 +167,11 @@ class RoomControllerTest {
         given(roomService.addRoom(createRequest)).willReturn(roomDetails);
 
 //        when and then
-        mockMvc.perform(post("/rooms/add")
+        mockMvc.perform(post("/api/v1/rooms")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", containsString("/rooms/add/" + roomDetails.id())))
+                .andExpect(header().string("Location", containsString("/api/v1/rooms/" + roomDetails.id())))
                 .andExpect(jsonPath("$.id").value(roomDetails.id()))
                 .andExpect(jsonPath("$.name").value(roomDetails.name()))
                 .andExpect(jsonPath("$.type.name").value(roomDetails.type().name()))

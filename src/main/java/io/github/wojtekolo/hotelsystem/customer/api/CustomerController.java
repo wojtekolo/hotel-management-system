@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/api/v1/customers")
 public class CustomerController {
     private final CustomerService customerService;
 
@@ -17,7 +17,7 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<CustomerDetails> addCustomer(@RequestBody @Valid CustomerCreateRequest createRequest){
         return ResponseEntity.ok(customerService.addCustomer(createRequest));
     }
