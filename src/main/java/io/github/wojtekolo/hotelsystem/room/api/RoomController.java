@@ -13,18 +13,18 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/rooms")
+@RequestMapping("/api/v1/rooms")
 @RequiredArgsConstructor
 public class RoomController {
 
     private final RoomService roomService;
 
-    @GetMapping("/list")
+    @GetMapping
     public ResponseEntity<Slice<RoomListItem>> getRooms(@PageableDefault(page = 0, size = 20, sort = "id") Pageable pageable) {
         Slice<RoomListItem> roomListItems = roomService.getRooms(pageable);
         return ResponseEntity.ok(roomListItems);
     }
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<RoomDetails> addRoom(@Valid @RequestBody RoomCreateRequest createRequest) {
         RoomDetails createdRoom = roomService.addRoom(createRequest);
 
