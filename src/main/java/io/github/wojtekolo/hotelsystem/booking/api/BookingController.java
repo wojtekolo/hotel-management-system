@@ -33,4 +33,9 @@ public class BookingController {
         BookingDetails details = bookingService.updateBooking(id, updateRequest);
         return ResponseEntity.ok(details);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BookingDetails> getBooking(@PathVariable Long id){
+        return ResponseEntity.ok(bookingService.getBooking(id));
+    }
 }
