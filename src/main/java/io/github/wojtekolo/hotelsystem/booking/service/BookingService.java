@@ -91,6 +91,7 @@ public class BookingService {
         return bookingMapper.toBookingDetails(booking);
     }
 
+    @Transactional
     public BookingDetails getBooking(Long bookingId){
         return bookingMapper.toBookingDetails(findBooking(bookingId));
     }
