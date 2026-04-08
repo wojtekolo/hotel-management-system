@@ -156,7 +156,6 @@ class BookingServiceIntegrationTest {
         entityManager.clear();
 
         BookingUpdateRequest updateRequest = createBookingUpdateRequest(
-                booking.getId(),
                 employee.getId(),
                 List.of(
                         createRoomStayUpdateRequest(booking.getStays().getFirst().getId(),
@@ -165,7 +164,7 @@ class BookingServiceIntegrationTest {
         );
 
 //        when
-        BookingDetails result = bookingService.updateBooking(updateRequest);
+        BookingDetails result = bookingService.updateBooking(booking.getId(), updateRequest);
 
 //        then
         entityManager.flush();

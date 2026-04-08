@@ -194,12 +194,12 @@ class BookingServiceTest {
         booking.addStay(buildStay(1L, room, employee, today.plusDays(10), today.plusDays(20)));
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 2L, today.plusDays(12), today.plusDays(15))
         ));
 
 //        when
-        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+        BookingDetails details = bookingService.updateBooking(1L, newBookingRequest);
 
 //        then
         assertThat(details.stays().getFirst().roomId()).isEqualTo(2L);
@@ -222,13 +222,13 @@ class BookingServiceTest {
         booking.addStay(buildStay(2L, room, employee, today.plusDays(15), today.plusDays(20))); //asdas
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16)),
                 createRoomStayUpdateRequest(2L, 1L, today.plusDays(16), today.plusDays(21)) //asdas
         ));
 
 //        when
-        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+        BookingDetails details = bookingService.updateBooking(1L, newBookingRequest);
 
 //        then
         assertThat(details.stays())
@@ -257,12 +257,12 @@ class BookingServiceTest {
 
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of(
                 createRoomStayUpdateRequest(1L, 1L, today.plusDays(11), today.plusDays(16))
         ));
 
 //        when
-        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+        BookingDetails details = bookingService.updateBooking(1L, newBookingRequest);
 
 //        then
         assertThat(details.stays()).hasSize(2);
@@ -285,10 +285,10 @@ class BookingServiceTest {
 
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of());
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of());
 
 //        when and then
-        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+        assertThatThrownBy(() ->bookingService.updateBooking(1L, newBookingRequest))
                 .isInstanceOf(BookingValidationException.class)
                 .satisfies(ex ->{
                     BookingValidationException roomStayEx = (BookingValidationException) ex;
@@ -313,12 +313,12 @@ class BookingServiceTest {
         booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of(
                 createRoomStayUpdateRequest(5L, 2L, today.plusDays(10), today.plusDays(22))
         ));
 
 //        when
-        BookingDetails details = bookingService.updateBooking(newBookingRequest);
+        BookingDetails details = bookingService.updateBooking(1L, newBookingRequest);
 
 //        then
         assertThat(details.stays())
@@ -340,12 +340,12 @@ class BookingServiceTest {
         booking.getStays().getFirst().setStatus(RoomStayStatus.ACTIVE);
         mockBooking(booking);
 
-        var newBookingRequest = createBookingUpdateRequest(1L, employeeId, List.of(
+        var newBookingRequest = createBookingUpdateRequest(employeeId, List.of(
                 createRoomStayUpdateRequest(5L, 2L, today.plusDays(12), today.plusDays(20))
         ));
 
 //        when and then
-        assertThatThrownBy(() ->bookingService.updateBooking(newBookingRequest))
+        assertThatThrownBy(() ->bookingService.updateBooking(1L, newBookingRequest))
                 .isInstanceOf(BookingValidationException.class)
                 .satisfies(ex ->{
                     BookingValidationException bookingEx = (BookingValidationException) ex;

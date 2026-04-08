@@ -95,9 +95,8 @@ public class BookingTestUtils {
         );
     }
 
-    public static BookingUpdateRequest createBookingUpdateRequest(Long bookingId, Long employeeId, List<RoomStayUpdateRequest> stayRequests) {
+    public static BookingUpdateRequest createBookingUpdateRequest(Long employeeId, List<RoomStayUpdateRequest> stayRequests) {
         return new BookingUpdateRequest(
-                bookingId,
                 employeeId,
                 stayRequests
         );

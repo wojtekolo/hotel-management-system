@@ -26,6 +26,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -130,7 +131,7 @@ public class BookingServiceConcurrencyIntegrationTest {
         Employee employee = data.prepareEmployee();
         Room targetRoom = data.prepareRoom();
 
-        List<BookingUpdateRequest> requests = data.prepareCollidingUpdateRequests(requestCount, targetRoom, customer, employee);
+        Map<Long, BookingUpdateRequest> requests = data.prepareCollidingUpdateRequests(requestCount, targetRoom, customer, employee);
 
 
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -142,11 +143,11 @@ public class BookingServiceConcurrencyIntegrationTest {
 
 //        when
         try (ExecutorService executor = Executors.newFixedThreadPool(requestCount)) {
-            for (BookingUpdateRequest request : requests) {
+            for (Map.Entry<Long, BookingUpdateRequest> entry : requests.entrySet()) {
                 executor.execute(() -> {
                     try {
                         startLatch.await();
-                        bookingService.updateBooking(request);
+                        bookingService.updateBooking(entry.getKey(), entry.getValue());
                     } catch (BookingValidationException e) {
                         exceptions.add(e);
                     } catch (InterruptedException e) {
