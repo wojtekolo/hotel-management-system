@@ -23,8 +23,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.*;
@@ -74,8 +75,8 @@ public class TestDataFactory {
         return employee;
     }
 
-    public List<BookingUpdateRequest> prepareCollidingUpdateRequests(int count, Room targetRoom, Customer customer, Employee employee) {
-        List<BookingUpdateRequest> requests = new ArrayList<>();
+    public Map<Long, BookingUpdateRequest> prepareCollidingUpdateRequests(int count, Room targetRoom, Customer customer, Employee employee) {
+        Map<Long, BookingUpdateRequest> requests = new HashMap<>();
         IntStream.range(0, count).forEach(i -> {
 
             Room room = prepareRoom();
@@ -86,7 +87,7 @@ public class TestDataFactory {
 
             entityManager.persist(booking);
 
-            requests.add(new BookingUpdateRequest(booking.getId(), employee.getId(), List.of(
+            requests.put(booking.getId(), new BookingUpdateRequest(employee.getId(), List.of(
                     new RoomStayUpdateRequest(stay.getId(), targetRoom.getId(), stay.getActiveFrom(), stay.getActiveTo(), null)
             )));
 
@@ -96,10 +97,10 @@ public class TestDataFactory {
 
     public List<BookingCreateRequest> prepareCollidingCreateRequests(int count, Room room, Customer customer, Employee employee) {
         return IntStream.range(0, count)
-                        .mapToObj(
-                                i -> new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
-                                        createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))))
-                        )
-                        .toList();
+                .mapToObj(
+                        i -> new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
+                                createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))))
+                )
+                .toList();
     }
 }

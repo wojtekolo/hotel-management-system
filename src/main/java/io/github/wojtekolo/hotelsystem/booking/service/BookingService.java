@@ -61,8 +61,8 @@ public class BookingService {
     }
 
     @Transactional
-    public BookingDetails updateBooking(BookingUpdateRequest request) {
-        Booking booking = findBooking(request.bookingId());
+    public BookingDetails updateBooking(Long bookingId, BookingUpdateRequest request) {
+        Booking booking = findBooking(bookingId);
         if (booking.getStatus() == BookingStatus.CANCELLED)
             throw new BookingStatusException("Cannot edit cancelled booking", BookingErrorCode.BOOKING_CANCELLED_CANNOT_BE_EDITED, booking.getId());
 

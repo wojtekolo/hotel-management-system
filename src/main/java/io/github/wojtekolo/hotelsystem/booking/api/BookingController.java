@@ -29,9 +29,8 @@ public class BookingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookingDetails> updateBooking(@Valid @RequestBody BookingUpdateRequest updateRequest){
-        BookingDetails details = bookingService.updateBooking(updateRequest);
-
+    public ResponseEntity<BookingDetails> updateBooking(@PathVariable Long id, @Valid @RequestBody BookingUpdateRequest updateRequest){
+        BookingDetails details = bookingService.updateBooking(id, updateRequest);
         return ResponseEntity.ok(details);
     }
 }
