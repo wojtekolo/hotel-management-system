@@ -10,7 +10,6 @@ import io.github.wojtekolo.hotelsystem.booking.model.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
 import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
-import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingMapper;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingValidator;
@@ -70,9 +69,6 @@ class BookingServiceTest {
     private BookingRepository bookingRepository;
 
     @Mock
-    private RoomStayRepository roomStayRepository;
-
-    @Mock
     private BookingValidator bookingValidator;
 
     private BookingService bookingService;
@@ -102,7 +98,7 @@ class BookingServiceTest {
         mockRoom(2L);
         mockEmployee();
         mockCustomer();
-        mockBooking();
+        mockBookingSave();
 
         var request = createBookingCreateRequest(List.of(
            createRoomStayCreateRequest(1L, today.plusDays(10), today.plusDays(15)),
@@ -185,7 +181,6 @@ class BookingServiceTest {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
         Employee employee = mockEmployee();
-        mockBooking();
 
         Room room = mockRoom(2L, "roomname2");
 
@@ -213,7 +208,6 @@ class BookingServiceTest {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
         Employee employee = mockEmployee();
-        mockBooking();
 
         Room room = mockRoom(1L);
 
@@ -245,7 +239,6 @@ class BookingServiceTest {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
         Employee employee = mockEmployee();
-        mockBooking();
 
         Room room = mockRoom(1L);
 
@@ -303,7 +296,6 @@ class BookingServiceTest {
 //        given
         Customer customer = CustomerTestUtils.aValidCustomer().build();
         Employee employee = mockEmployee();
-        mockBooking();
 
         Room room = mockRoom(2L);
 
@@ -385,7 +377,7 @@ class BookingServiceTest {
                 .thenReturn(Optional.of(customer));
     }
 
-    private void mockBooking() {
+    private void mockBookingSave() {
         when(bookingRepository.save(any(Booking.class)))
                 .thenAnswer(invocation -> {
                     Booking bookingArg = invocation.getArgument(0);
@@ -414,24 +406,6 @@ class BookingServiceTest {
                                  .build();
         when(roomRepository.findById(id)).thenReturn(Optional.of(room));
         return room;
-    }
-
-    private Room mockRoom(Long id, BigDecimal pricePerNight) {
-        Room room = RoomTestUtils.aValidRoom(RoomTestUtils.aValidType().pricePerNight(pricePerNight).build())
-                                 .id(id)
-                                 .build();
-        when(roomRepository.findById(id)).thenReturn(Optional.of(room));
-        return room;
-    }
-
-    private void mockRoomStayConflicts(Long bookingId, Long roomId, LocalDate from, LocalDate to, RoomStay... conflicts) {
-        when(roomStayRepository.getConflicts(
-                roomId,
-                List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
-                from,
-                to,
-                bookingId
-        )).thenReturn(List.of(conflicts));
     }
 
     private RoomStay buildStay(Long id, Room room, Employee employee, LocalDate from, LocalDate to){

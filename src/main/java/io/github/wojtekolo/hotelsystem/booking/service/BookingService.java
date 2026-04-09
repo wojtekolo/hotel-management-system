@@ -86,7 +86,6 @@ public class BookingService {
         Employee employee = findEmployee(request.employeeId());
 
         updateRoomStays(booking, request.stays(), employee);
-        booking = bookingRepository.save(booking);
 
         return bookingMapper.toBookingDetails(booking);
     }
