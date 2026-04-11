@@ -181,16 +181,18 @@ public class RoomStay {
     }
 
     Optional<RoomStayViolationReason> tryUpdatePrice(BigDecimal newPricePerNight) {
-        if (newPricePerNight == null) return Optional.empty();
-        if (newPricePerNight.compareTo(BigDecimal.ZERO) < 0) {
-            this.pricePerNight = BigDecimal.ZERO;
+        if (newPricePerNight == null || newPricePerNight.compareTo(this.pricePerNight) == 0) return Optional.empty();
+
+        if (canEditPrice()) {
+            if (newPricePerNight.compareTo(BigDecimal.ZERO) < 0) {
+                this.pricePerNight = BigDecimal.ZERO;
+            } else {
+                this.pricePerNight = newPricePerNight;
+            }
             return Optional.empty();
+        } else {
+            return Optional.of(RoomStayViolationReason.PRICE_EDIT_INVALID_STATUS);
         }
-        if (canEditPrice() || newPricePerNight.compareTo(this.pricePerNight) == 0) {
-            this.pricePerNight = newPricePerNight;
-            return Optional.empty();
-        }
-        return Optional.of(RoomStayViolationReason.PRICE_EDIT_INVALID_STATUS);
     }
 
     Optional<RoomStayViolationReason> tryUpdateRoom(Room room) {
