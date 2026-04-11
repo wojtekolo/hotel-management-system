@@ -105,12 +105,19 @@ public class Booking {
             if (roomStay == null) continue;
 
             allViolations.addAll(validateStayInvariants(roomStay.getId(), roomStay.getStatus(), command.roomId(), command.from(), command.to(), command.customPricePerNight()));
+            allViolations.add(updatePricePerNight(roomStay, command.customPricePerNight()));
 
             Room room = rooms.get(command.roomId());
             if (room != null) {
                 allViolations.add(updateRoom(roomStay, room));
                 allViolations.addAll(updateDates(roomStay, command.from(), command.to()));
-                allViolations.add(updatePricePerNight(roomStay, command.customPricePerNight()));
+            } else {
+                if (!roomStay.canEditStartDate() && !command.from().equals(roomStay.getActiveFrom())) {
+                    allViolations.add(new RoomStayViolation(roomStay.getId(), roomStay.getStatus(), RoomStayViolationReason.START_DATE_EDIT_INVALID_STATUS, null));
+                }
+                if (!roomStay.canEditEndDate() && !command.to().equals(roomStay.getActiveTo())) {
+                    allViolations.add(new RoomStayViolation(roomStay.getId(), roomStay.getStatus(), RoomStayViolationReason.END_DATE_EDIT_INVALID_STATUS, null));
+                }
             }
 
         }
