@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.room.service;
 
+import io.github.wojtekolo.hotelsystem.booking.service.loading.RoomLoadResult;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.room.persistence.RoomRepository;
@@ -14,6 +15,11 @@ import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -50,5 +56,17 @@ public class RoomService {
 
         Room savedRoom = roomRepository.save(room);
         return roomMapper.toDetailsDto(savedRoom);
+    }
+
+    public RoomLoadResult findAndLockRooms(Set<Long> ids){
+        List<Long> sortedIds = ids.stream().sorted().toList();
+        List<Room> rooms = roomRepository.findAllByIdWithLock(sortedIds);
+
+        Map<Long, Room> loadedRooms = rooms.stream().collect(Collectors.toMap(Room::getId, room -> room));
+
+        Set<Long> missingIds = sortedIds.stream()
+                .filter(id -> !loadedRooms.containsKey(id)).collect(Collectors.toSet());
+
+        return new RoomLoadResult(loadedRooms, missingIds);
     }
 }

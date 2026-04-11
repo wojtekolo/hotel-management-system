@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.exception;
 
+import io.github.wojtekolo.hotelsystem.booking.exception.details.BookingErrorCode;
 import lombok.Getter;
 
 @Getter

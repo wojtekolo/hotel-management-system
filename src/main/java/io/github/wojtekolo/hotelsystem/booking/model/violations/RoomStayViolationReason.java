@@ -1,0 +1,13 @@
+package io.github.wojtekolo.hotelsystem.booking.model.violations;
+
+public enum RoomStayViolationReason {
+    CANCEL_INVALID_STATUS,
+    START_DATE_EDIT_INVALID_STATUS,
+    END_DATE_EDIT_INVALID_STATUS,
+    ROOM_EDIT_INVALID_STATUS,
+    PRICE_EDIT_INVALID_STATUS,
+    END_DATE_IN_THE_PAST,
+    START_DATE_IN_THE_PAST,
+    END_DATE_NOT_AFTER_START_DATE,
+    PRICE_NEGATIVE
+}

@@ -1,9 +1,11 @@
 package io.github.wojtekolo.hotelsystem.booking.persistence;
 
-import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
-import io.github.wojtekolo.hotelsystem.booking.model.RoomStayStatus;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,6 +18,9 @@ public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
         return getConflicts(roomId, statuses, requestFrom, requestTo, null);
     }
 
+    @QueryHints(value = {
+            @QueryHint(name = org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE, value = "COMMIT")
+    })
     @Query("""
             SELECT rs FROM RoomStay rs
             WHERE rs.room.id = ?1

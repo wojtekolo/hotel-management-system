@@ -1,8 +1,6 @@
 package io.github.wojtekolo.hotelsystem.common;
 
-import io.github.wojtekolo.hotelsystem.booking.api.BookingConflictResponse;
-import io.github.wojtekolo.hotelsystem.booking.api.BookingValidationResponse;
-import io.github.wojtekolo.hotelsystem.booking.exception.BookingConflictException;
+import io.github.wojtekolo.hotelsystem.booking.api.error.BookingFailedValidationResponse;
 import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.*;
 import org.springframework.http.HttpStatus;
@@ -69,22 +67,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
     }
 
-    @ExceptionHandler(BookingConflictException.class)
-    public ResponseEntity<BookingConflictResponse> handleBookingConflict(BookingConflictException ex){
-        var response = new BookingConflictResponse(
-                ex.getMessage(),
-                ex.getConflicts()
-        );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
     @ExceptionHandler(BookingValidationException.class)
-    public ResponseEntity<BookingValidationResponse> handleBookingConflict(BookingValidationException ex){
-        var response = new BookingValidationResponse(
+    public ResponseEntity<BookingFailedValidationResponse> handleBookingConflict(BookingValidationException ex){
+        var response = new BookingFailedValidationResponse(
                 ex.getMessage(),
                 ex.getExternalConflicts(),
                 ex.getInternalConflicts(),
-                ex.getBadStatusDetails()
+                ex.getRoomStayViolationsDetails(),
+                ex.getIntegrityViolationsDetails()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }

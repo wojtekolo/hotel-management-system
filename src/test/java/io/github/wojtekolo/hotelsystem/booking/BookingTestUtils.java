@@ -1,7 +1,12 @@
 package io.github.wojtekolo.hotelsystem.booking;
 
-import io.github.wojtekolo.hotelsystem.booking.api.*;
-import io.github.wojtekolo.hotelsystem.booking.model.*;
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.RoomStayCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.RoomStayUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.response.BookingDetails;
+import io.github.wojtekolo.hotelsystem.booking.api.response.RoomStayDetails;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.*;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
 import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
@@ -83,13 +88,13 @@ public class BookingTestUtils {
 
     public static RoomStay.RoomStayBuilder aValidRoomStay() {
         return RoomStay.builder()
-                .booking(aValidBooking().build())
-                .room(RoomTestUtils.aValidRoom().build())
-                .createBy(EmployeeTestUtils.aValidEmployee().build())
-                .pricePerNight(BigDecimal.valueOf(500))
-                .activeFrom(LocalDate.now().plusDays(10))
-                .activeTo(LocalDate.now().plusDays(15))
-                .status(RoomStayStatus.PLANNED);
+                       .booking(aValidBooking().build())
+                       .room(RoomTestUtils.aValidRoom().build())
+                       .createBy(EmployeeTestUtils.aValidEmployee().build())
+                       .pricePerNight(BigDecimal.valueOf(500))
+                       .activeFrom(LocalDate.now().plusDays(10))
+                       .activeTo(LocalDate.now().plusDays(15))
+                       .status(RoomStayStatus.PLANNED);
     }
 
     public static RoomStay buildRoomStay(Long id, Room room, LocalDate from, LocalDate to) {
@@ -113,6 +118,15 @@ public class BookingTestUtils {
         return new BookingUpdateRequest(
                 employeeId,
                 stayRequests
+        );
+    }
+
+    public static RoomStayCreateRequest createRoomStayCreateRequest(Long roomId) {
+        return createRoomStayCreateRequest(
+                roomId,
+                null,
+                null,
+                null
         );
     }
 
@@ -140,6 +154,16 @@ public class BookingTestUtils {
                 roomId,
                 from,
                 to,
+                null
+        );
+    }
+
+    public static RoomStayUpdateRequest createRoomStayUpdateRequest(Long roomId) {
+        return new RoomStayUpdateRequest(
+                null,
+                roomId,
+                null,
+                null,
                 null
         );
     }

@@ -1,6 +1,7 @@
 package io.github.wojtekolo.hotelsystem.booking.api;
 
 import io.github.wojtekolo.hotelsystem.booking.BookingTestUtils;
+import io.github.wojtekolo.hotelsystem.booking.api.response.BookingDetails;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;

@@ -1,10 +1,10 @@
 package io.github.wojtekolo.hotelsystem.booking.service;
 
-import io.github.wojtekolo.hotelsystem.booking.api.BookingDetails;
-import io.github.wojtekolo.hotelsystem.booking.api.RoomStayConflictDetails;
-import io.github.wojtekolo.hotelsystem.booking.api.RoomStayDetails;
-import io.github.wojtekolo.hotelsystem.booking.model.Booking;
-import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.api.response.BookingDetails;
+import io.github.wojtekolo.hotelsystem.booking.exception.details.ConflictingStay;
+import io.github.wojtekolo.hotelsystem.booking.api.response.RoomStayDetails;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStay;
 import io.github.wojtekolo.hotelsystem.customer.service.CustomerMapper;
 import io.github.wojtekolo.hotelsystem.employee.service.EmployeeMapper;
 import org.mapstruct.*;
@@ -35,7 +35,7 @@ public interface BookingMapper {
     @Mapping(target = "roomStayId", source = "id")
     @Mapping(target = "from", source = "activeFrom")
     @Mapping(target = "to", source = "activeTo")
-    RoomStayConflictDetails toRoomStayConflictDetails(RoomStay roomStay);
+    ConflictingStay toRoomStayConflictDetails(RoomStay roomStay);
 
     @Named("calculateBookingCost")
     default BigDecimal calculateBookingCost(Booking booking) {
