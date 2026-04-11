@@ -56,6 +56,8 @@ public class BookingService {
         if (validationResult.hasErrors() || !updateErrors.isEmpty() || !resources.integrityErrors().isEmpty())
             throw validationResult.toException("Error updating booking", updateErrors, resources.integrityErrors());
 
+        bookingRepository.save(resources.booking());
+
         return bookingMapper.toBookingDetails(resources.booking());
     }
 
