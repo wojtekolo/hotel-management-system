@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.room;
 
+import io.github.wojtekolo.hotelsystem.common.TestDataFactory;
 import io.github.wojtekolo.hotelsystem.room.api.RoomListItem;
 import io.github.wojtekolo.hotelsystem.room.model.LifecycleStatus;
 import io.github.wojtekolo.hotelsystem.room.model.OperationalStatus;
@@ -10,16 +11,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 
 import java.math.BigDecimal;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(properties = {
         "spring.sql.init.mode=never",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
+@Import(TestDataFactory.class)
 class RoomRepositoryTest {
 
     @Autowired
@@ -27,6 +32,9 @@ class RoomRepositoryTest {
 
     @Autowired
     TestEntityManager entityManager;
+
+    @Autowired
+    TestDataFactory data;
 
     @Test
     void should_return_room_list_item_when_room_exists(){
@@ -61,5 +69,33 @@ class RoomRepositoryTest {
 
 //        then
         assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void should_return_list_of_chosen_and_existing_rooms(){
+//        give
+        Room requested1 = data.prepareRoom();
+        Room requested2 = data.prepareRoom();
+        Room ignored = data.prepareRoom();
+        Long nonExistentId = 1234L;
+
+//        when
+        List<Room> rooms = roomRepository.findAllByIdWithLock(List.of(requested1.getId(), requested2.getId(), nonExistentId));
+
+//        then
+        assertThat(rooms).extracting(Room::getId).containsExactlyInAnyOrder(requested1.getId(), requested2.getId());
+    }
+
+    @Test
+    void should_return_empty_list_when_no_ids_used(){
+//        given
+        Room ignored = data.prepareRoom();
+
+//        when
+        List<Room> rooms = roomRepository.findAllByIdWithLock(List.of());
+
+//        then
+        assertThat(rooms).isNotNull();
+        assertThat(rooms).isEmpty();
     }
 }

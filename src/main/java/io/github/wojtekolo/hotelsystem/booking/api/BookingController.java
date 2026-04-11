@@ -1,5 +1,8 @@
 package io.github.wojtekolo.hotelsystem.booking.api;
 
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.response.BookingDetails;
 import io.github.wojtekolo.hotelsystem.booking.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

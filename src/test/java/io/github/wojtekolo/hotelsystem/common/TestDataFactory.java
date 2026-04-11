@@ -1,10 +1,10 @@
 package io.github.wojtekolo.hotelsystem.common;
 
-import io.github.wojtekolo.hotelsystem.booking.api.BookingCreateRequest;
-import io.github.wojtekolo.hotelsystem.booking.api.BookingUpdateRequest;
-import io.github.wojtekolo.hotelsystem.booking.api.RoomStayUpdateRequest;
-import io.github.wojtekolo.hotelsystem.booking.model.Booking;
-import io.github.wojtekolo.hotelsystem.booking.model.RoomStay;
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingCreateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.BookingUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.api.request.RoomStayUpdateRequest;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
+import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStay;
 import io.github.wojtekolo.hotelsystem.common.person.PersonTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.CustomerTestUtils;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
@@ -36,7 +36,6 @@ import static io.github.wojtekolo.hotelsystem.booking.BookingTestUtils.*;
 public class TestDataFactory {
     private final LocalDate today = LocalDate.now();
     private final EntityManager entityManager;
-    private final TransactionTemplate transactionTemplate;
 
     public Room prepareRoom(BigDecimal pricePerNight) {
         RoomType roomType = RoomTestUtils.aValidType().pricePerNight(pricePerNight).build();

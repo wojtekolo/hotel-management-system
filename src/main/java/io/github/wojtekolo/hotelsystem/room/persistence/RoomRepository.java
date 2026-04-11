@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
@@ -35,6 +35,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     boolean existsByName(String name);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT r FROM Room r where r.id = :roomId")
-    Optional<Room> findByIdWithLock(Long roomId);
+    @Query("SELECT r FROM Room r where r.id in :ids")
+    List<Room> findAllByIdWithLock(List<Long> ids);
 }
