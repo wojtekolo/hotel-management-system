@@ -37,8 +37,6 @@ class BookingExternalValidatorTest {
     @Mock
     private RoomStayRepository roomStayRepository;
 
-    private BookingMapper bookingMapper;
-
     private BookingExternalValidator externalValidator;
 
 
@@ -46,7 +44,7 @@ class BookingExternalValidatorTest {
 
     @BeforeEach
     void setUp() {
-        bookingMapper = new BookingMapperImpl(customerMapper, employeeMapper);
+        BookingMapper bookingMapper = new BookingMapperImpl(customerMapper, employeeMapper);
         externalValidator = new BookingExternalValidator(
                 roomStayRepository,
                 bookingMapper

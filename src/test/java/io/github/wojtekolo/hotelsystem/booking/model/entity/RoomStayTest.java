@@ -204,22 +204,6 @@ class RoomStayTest {
                 assertThat(result.get()).isEqualTo(RoomStayViolationReason.END_DATE_EDIT_INVALID_STATUS);
                 assertThat(roomStay.getActiveTo()).isEqualTo(LocalDate.now().plusDays(10));
             }
-
-//            @Test
-//            public void should_return_violation_when_new_active_to_is_not_after_active_from() {
-////                  given
-//                RoomStay roomStay = RoomStay.builder()
-//                                            .activeFrom(referenceDate.plusDays(5))
-//                                            .activeTo(referenceDate.plusDays(10))
-//                                            .status(RoomStayStatus.PLANNED).build();
-////                  when
-//                Optional<RoomStayViolationReason> result = roomStay.tryUpdateActiveTo(referenceDate.plusDays(5));
-//
-////                  then
-//                assertThat(result).isPresent();
-//                assertThat(result.get()).isEqualTo(RoomStayViolationReason.END_DATE_NOT_AFTER_START_DATE);
-//                assertThat(roomStay.getActiveTo()).isEqualTo(referenceDate.plusDays(10));
-//            }
         }
 
         @Nested
@@ -282,38 +266,6 @@ class RoomStayTest {
                 assertThat(result.get()).isEqualTo(RoomStayViolationReason.START_DATE_EDIT_INVALID_STATUS);
                 assertThat(roomStay.getActiveFrom()).isEqualTo(referenceDate.plusDays(5));
             }
-
-//            @Test
-//            public void should_return_violation_when_new_active_from_is_in_the_past() {
-////                  given
-//                RoomStay roomStay = RoomStay.builder()
-//                                            .activeFrom(referenceDate.plusDays(5))
-//                                            .activeTo(referenceDate.plusDays(10))
-//                                            .status(RoomStayStatus.PLANNED).build();
-////                  when
-//                Optional<RoomStayViolationReason> result = roomStay.tryUpdateActiveFrom(LocalDate.now().minusDays(1));
-//
-////                  then
-//                assertThat(result).isPresent();
-//                assertThat(result.get()).isEqualTo(RoomStayViolationReason.START_DATE_IN_THE_PAST);
-//                assertThat(roomStay.getActiveFrom()).isEqualTo(referenceDate.plusDays(5));
-//            }
-//
-//            @Test
-//            public void should_return_violation_when_new_active_from_is_not_before_active_to() {
-////                  given
-//                RoomStay roomStay = RoomStay.builder()
-//                                            .activeFrom(referenceDate.plusDays(5))
-//                                            .activeTo(referenceDate.plusDays(10))
-//                                            .status(RoomStayStatus.PLANNED).build();
-////                  when
-//                Optional<RoomStayViolationReason> result = roomStay.tryUpdateActiveFrom(referenceDate.plusDays(10));
-//
-////                  then
-//                assertThat(result).isPresent();
-//                assertThat(result.get()).isEqualTo(RoomStayViolationReason.END_DATE_NOT_AFTER_START_DATE);
-//                assertThat(roomStay.getActiveFrom()).isEqualTo(referenceDate.plusDays(5));
-//            }
         }
 
         @Nested

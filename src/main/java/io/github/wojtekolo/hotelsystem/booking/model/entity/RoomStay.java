@@ -217,8 +217,6 @@ public class RoomStay {
             return roomPricePerNight
                     .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
         } else {
-//            if (customPricePerNight.compareTo(BigDecimal.ZERO) < 0)
-//                throw new IllegalArgumentException("Price cannot be negative");
             return customPricePerNight.setScale(2, RoundingMode.HALF_UP);
         }
     }
