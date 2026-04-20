@@ -113,10 +113,19 @@ class RoomStayRepositoryTest {
     }
 
     @Test
-    public void should_return_all_occupancy_ranges() {
+    public void should_return_all_correct_ranges() {
 //        given
         LocalDate today = LocalDate.now();
         BookingTestContext context = getContext();
+
+        Booking excludedBooking = BookingTestUtils.aValidBooking(context.customer(), context.employee()).build();
+
+        RoomStay excludedRoomStay = BookingTestUtils.aValidRoomStay(excludedBooking, context.room(), context.employee())
+                .activeFrom(today.plusDays(16))
+                .activeTo(today.plusDays(18))
+                .build();
+
+        excludedBooking.addStay(excludedRoomStay);
 
         Booking booking = BookingTestUtils.aValidBooking(context.customer(), context.employee()).build();
 
@@ -141,13 +150,14 @@ class RoomStayRepositoryTest {
         booking.addStay(canceledStay);
 
         entityManager.persist(booking);
+        entityManager.persist(excludedBooking);
 
         entityManager.flush();
         entityManager.clear();
 
 //        when
         List<OccupiedRange> result = roomStayRepository.getOccupiedRangesForRoom(context.room().getId(),
-                RoomStayStatus.COLLIDING_STATUSES, today.plusDays(12), today.plusDays(30));
+                RoomStayStatus.COLLIDING_STATUSES, today.plusDays(12), today.plusDays(30), excludedBooking.getId());
 
 //        then
         assertThat(result)

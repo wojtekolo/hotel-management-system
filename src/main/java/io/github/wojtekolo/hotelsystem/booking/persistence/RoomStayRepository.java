@@ -16,7 +16,7 @@ import java.util.Set;
 @Repository
 public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
 
-    default List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo){
+    default List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo) {
         return getConflicts(roomId, statuses, requestFrom, requestTo, null);
     }
 
@@ -25,24 +25,37 @@ public interface RoomStayRepository extends JpaRepository<RoomStay, Long> {
     })
     @Query("""
             SELECT rs FROM RoomStay rs
-            WHERE rs.room.id = ?1
-            AND rs.status IN ?2
-            AND (rs.activeTo>?3)
-            AND (rs.activeFrom<?4)
-            AND (?5 IS NULL OR rs.booking.id != ?5)
+            WHERE rs.room.id = :roomId
+            AND rs.status IN :statuses
+            AND (rs.activeTo>:requestFrom)
+            AND (rs.activeFrom<:requestTo)
+            AND (:excludedBookingId IS NULL OR rs.booking.id != :excludedBookingId)
             """
     )
-    List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses, LocalDate requestFrom, LocalDate requestTo, Long excludedBookingID);
+    List<RoomStay> getConflicts(Long roomId, List<RoomStayStatus> statuses,
+                                LocalDate requestFrom, LocalDate requestTo, Long excludedBookingId);
 
     long countByRoomId(Long roomId);
 
+    default List<OccupiedRange> getOccupiedRangesForRoom(Long roomId, Set<RoomStayStatus> statuses,
+                                                         LocalDate from, LocalDate to) {
+        return getOccupiedRangesForRoom(roomId, statuses, from, to, null);
+    }
+
+
     @Query("""
-                SELECT NEW io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange(rs.activeFrom, rs.activeTo)
+                SELECT NEW io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange(rs.activeFrom, rs.activeTo, rs.booking.id)
                 FROM RoomStay rs
-                WHERE rs.room.id = ?1
-                AND rs.status IN ?2
-                AND (rs.activeTo>?3)
-                AND (rs.activeFrom<?4)
+                WHERE rs.room.id = :roomId
+                AND rs.status IN :statuses
+                AND (rs.activeTo > :from)
+                AND (rs.activeFrom < :to)
+                AND (:excludedBookingId IS NULL OR rs.booking.id <> :excludedBookingId)
             """)
-    List<OccupiedRange> getOccupiedRangesForRoom(Long roomId, Set<RoomStayStatus> statuses, LocalDate from, LocalDate to);
+    List<OccupiedRange> getOccupiedRangesForRoom(
+            Long roomId,
+            Set<RoomStayStatus> statuses,
+            LocalDate from,
+            LocalDate to,
+            Long excludedBookingId);
 }

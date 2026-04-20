@@ -42,6 +42,6 @@ public class RoomController {
 
     @GetMapping("/{roomId}/occupancy")
     public ResponseEntity<RoomOccupancyResponse> getRoomOccupancy(@PathVariable Long roomId, @Valid OccupancyQuery query) {
-        return ResponseEntity.ok(availabilityService.getRoomOccupancy(roomId, query.from(), query.to()));
+        return ResponseEntity.ok(availabilityService.getRoomOccupancy(roomId, query));
     }
 }

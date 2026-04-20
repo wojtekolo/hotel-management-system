@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public record OccupiedRange(
         LocalDate from,
-        LocalDate to
+        LocalDate to,
+        Long bookingId
 ) {
 }

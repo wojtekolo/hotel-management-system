@@ -8,5 +8,7 @@ public record OccupancyQuery(
         LocalDate from,
 
         @NotNull (message = "End date is required")
-        LocalDate to
+        LocalDate to,
+
+        Long excludeBookingId
 ) {}
