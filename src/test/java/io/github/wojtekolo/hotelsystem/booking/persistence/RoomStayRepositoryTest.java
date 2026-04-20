@@ -2,6 +2,7 @@ package io.github.wojtekolo.hotelsystem.booking.persistence;
 
 import io.github.wojtekolo.hotelsystem.booking.BookingTestContext;
 import io.github.wojtekolo.hotelsystem.booking.BookingTestUtils;
+import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStay;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @DataJpaTest(properties = {
         "spring.sql.init.mode=never",
@@ -60,6 +62,7 @@ class RoomStayRepositoryTest {
         entityManager.persist(booking);
 
         entityManager.flush();
+        entityManager.clear();
 //        when
         List<RoomStay> result = roomStayRepository.getConflicts(context.room().getId(),
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
@@ -94,6 +97,7 @@ class RoomStayRepositoryTest {
         entityManager.persist(booking);
 
         entityManager.flush();
+        entityManager.clear();
 //        when
         List<RoomStay> result = roomStayRepository.getConflicts(context.room().getId(),
                 List.of(RoomStayStatus.ACTIVE, RoomStayStatus.PLANNED),
@@ -106,6 +110,58 @@ class RoomStayRepositoryTest {
                 .extracting(RoomStay::getId)
                 .containsExactlyInAnyOrder(roomStay1.getId(), roomStay2.getId());
 
+    }
+
+    @Test
+    public void should_return_all_occupancy_ranges() {
+//        given
+        LocalDate today = LocalDate.now();
+        BookingTestContext context = getContext();
+
+        Booking booking = BookingTestUtils.aValidBooking(context.customer(), context.employee()).build();
+
+        RoomStay roomStay1 = BookingTestUtils.aValidRoomStay(booking, context.room(), context.employee())
+                .activeFrom(today.plusDays(10))
+                .activeTo(today.plusDays(15))
+                .build();
+
+        RoomStay roomStay2 = BookingTestUtils.aValidRoomStay(booking, context.room(), context.employee())
+                .activeFrom(today.plusDays(20))
+                .activeTo(today.plusDays(25))
+                .build();
+
+        RoomStay canceledStay = BookingTestUtils.aValidRoomStay(booking, context.room(), context.employee())
+                .activeFrom(today.plusDays(16))
+                .activeTo(today.plusDays(18))
+                .status(RoomStayStatus.CANCELLED)
+                .build();
+
+        booking.addStay(roomStay1);
+        booking.addStay(roomStay2);
+        booking.addStay(canceledStay);
+
+        entityManager.persist(booking);
+
+        entityManager.flush();
+        entityManager.clear();
+
+//        when
+        List<OccupiedRange> result = roomStayRepository.getOccupiedRangesForRoom(context.room().getId(),
+                RoomStayStatus.COLLIDING_STATUSES, today.plusDays(12), today.plusDays(30));
+
+//        then
+        assertThat(result)
+                .extracting(OccupiedRange::from, OccupiedRange::to)
+                .containsExactlyInAnyOrder(
+                tuple(
+                        today.plusDays(10),
+                        today.plusDays(15)
+                ),
+                tuple(
+                        today.plusDays(20),
+                        today.plusDays(25)
+                )
+        );
     }
 
     private BookingTestContext getContext() {
