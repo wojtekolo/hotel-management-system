@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.room;
 
-import io.github.wojtekolo.hotelsystem.booking.service.availability.RoomAvailabilityService;
+import io.github.wojtekolo.hotelsystem.booking.service.occupancy.RoomOccupancyService;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceAlreadyExistsException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
 import io.github.wojtekolo.hotelsystem.room.api.RoomController;
@@ -42,7 +42,7 @@ class RoomControllerTest {
     private RoomService roomService;
 
     @MockitoBean
-    private RoomAvailabilityService availabilityService;
+    private RoomOccupancyService occupancyService;
 
     @Test
     void should_return_page_of_rooms() throws Exception {
