@@ -1,15 +1,11 @@
 package io.github.wojtekolo.hotelsystem.common.config.redis;
 
-import org.springframework.cache.Cache;
-import org.springframework.cache.interceptor.CacheErrorHandler;
-import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.*;
-import org.springframework.format.support.DefaultFormattingConversionService;
 
 import java.time.Duration;
 
