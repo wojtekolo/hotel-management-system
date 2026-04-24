@@ -19,7 +19,6 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -101,5 +100,15 @@ public class TestDataFactory {
                                 createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))))
                 )
                 .toList();
+    }
+
+    public Booking prepareBooking(Room room, Customer customer, Employee employee, LocalDate from, LocalDate to) {
+        Booking booking = aValidBooking(customer, employee).build();
+        RoomStay stay = aValidRoomStay(booking, room, employee)
+                .activeFrom(from).activeTo(to).build();
+        booking.addStay(stay);
+
+        entityManager.persist(booking);
+        return booking;
     }
 }
