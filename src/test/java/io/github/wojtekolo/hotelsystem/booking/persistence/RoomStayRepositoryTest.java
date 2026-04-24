@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.persistence;
 
+import io.github.wojtekolo.hotelsystem.AbstractIntegrationTest;
 import io.github.wojtekolo.hotelsystem.booking.BookingTestContext;
 import io.github.wojtekolo.hotelsystem.booking.BookingTestUtils;
 import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
@@ -17,9 +18,9 @@ import io.github.wojtekolo.hotelsystem.room.model.Room;
 import io.github.wojtekolo.hotelsystem.room.RoomTestUtils;
 import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,11 +28,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-@DataJpaTest(properties = {
-        "spring.sql.init.mode=never",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-class RoomStayRepositoryTest {
+@Transactional
+class RoomStayRepositoryTest extends AbstractIntegrationTest {
     @Autowired
     RoomStayRepository roomStayRepository;
 

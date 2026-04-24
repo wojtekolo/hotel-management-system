@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.service;
 
+import io.github.wojtekolo.hotelsystem.AbstractIntegrationTest;
 import io.github.wojtekolo.hotelsystem.booking.api.request.BookingCreateRequest;
 import io.github.wojtekolo.hotelsystem.booking.api.request.BookingUpdateRequest;
 import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
@@ -19,8 +20,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,12 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@TestPropertySource(properties = {
-        "spring.sql.init.mode=never",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-public class BookingServiceConcurrencyIntegrationTest {
+public class BookingServiceConcurrencyIntegrationTest extends AbstractIntegrationTest {
+
     @Autowired
     BookingService bookingService;
     @Autowired

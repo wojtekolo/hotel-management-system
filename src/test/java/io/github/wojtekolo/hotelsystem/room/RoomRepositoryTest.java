@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.room;
 
+import io.github.wojtekolo.hotelsystem.AbstractIntegrationTest;
 import io.github.wojtekolo.hotelsystem.common.TestDataFactory;
 import io.github.wojtekolo.hotelsystem.room.api.RoomListItem;
 import io.github.wojtekolo.hotelsystem.room.model.LifecycleStatus;
@@ -7,10 +8,10 @@ import io.github.wojtekolo.hotelsystem.room.model.OperationalStatus;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
 import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 import io.github.wojtekolo.hotelsystem.room.persistence.RoomRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -20,18 +21,15 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest(properties = {
-        "spring.sql.init.mode=never",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
 @Import(TestDataFactory.class)
-class RoomRepositoryTest {
+@Transactional
+class RoomRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired
     private RoomRepository roomRepository;
 
     @Autowired
-    TestEntityManager entityManager;
+    EntityManager entityManager;
 
     @Autowired
     TestDataFactory data;

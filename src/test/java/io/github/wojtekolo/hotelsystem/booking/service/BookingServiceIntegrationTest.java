@@ -1,5 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.service;
 
+import io.github.wojtekolo.hotelsystem.AbstractIntegrationTest;
 import io.github.wojtekolo.hotelsystem.booking.api.request.BookingCreateRequest;
 import io.github.wojtekolo.hotelsystem.booking.api.request.RoomStayCreateRequest;
 import io.github.wojtekolo.hotelsystem.booking.api.request.RoomStayUpdateRequest;
@@ -23,7 +24,7 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,11 +35,8 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-@TestPropertySource(properties = {
-        "spring.sql.init.mode=never",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-class BookingServiceIntegrationTest {
+@Testcontainers
+class BookingServiceIntegrationTest extends AbstractIntegrationTest {
 
     private final LocalDate today = LocalDate.now();
 
