@@ -7,6 +7,7 @@ import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundExcepti
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BookingControllerTest {
     @MockitoBean
     private BookingService bookingService;
+
+    @MockitoBean
+    private CacheManager cacheManager;
 
     @Autowired
     MockMvc mockMvc;

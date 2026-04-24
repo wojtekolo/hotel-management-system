@@ -13,6 +13,7 @@ import io.github.wojtekolo.hotelsystem.room.service.RoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -43,6 +44,9 @@ class RoomControllerTest {
 
     @MockitoBean
     private RoomOccupancyService occupancyService;
+
+    @MockitoBean
+    private CacheManager cacheManager;
 
     @Test
     void should_return_page_of_rooms() throws Exception {

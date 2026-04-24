@@ -8,6 +8,7 @@ import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResourceLoader;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResources;
+import io.github.wojtekolo.hotelsystem.booking.service.occupancy.RoomOccupancyCacheService;
 import io.github.wojtekolo.hotelsystem.booking.service.processing.BookingStayProcessor;
 import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidationResult;
 import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidator;
@@ -15,7 +16,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
- import java.util.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class BookingService {
     private final BookingValidator bookingValidator;
     private final BookingStayProcessor bookingStayProcessor;
     private final BookingResourceLoader bookingResourceLoader;
+    private final RoomOccupancyCacheService occupancyCacheService;
 
     @Transactional
     public BookingDetails addBooking(BookingCreateRequest request) {
@@ -41,12 +44,16 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
 
+        occupancyCacheService.evictRooms(resources.roomLoad().getRoomsIds());
+
         return bookingMapper.toBookingDetails(booking);
     }
 
     @Transactional
     public BookingDetails updateBooking(Long bookingId, BookingUpdateRequest request) {
         BookingResources resources = bookingResourceLoader.loadForUpdate(bookingId, request);
+        Set<Long> oldRoomIds = resources.booking().getStays().stream()
+                .map(stay -> stay.getRoom().getId()).collect(Collectors.toSet());
 
         List<RoomStayViolationDetails> updateErrors = bookingStayProcessor.updateBooking(
                 resources.booking(), request.stays(), resources.employee(), resources.roomLoad().rooms());
@@ -57,6 +64,9 @@ public class BookingService {
             throw validationResult.toException("Error updating booking", updateErrors, resources.integrityErrors());
 
         bookingRepository.save(resources.booking());
+
+        occupancyCacheService.evictRooms(resources.roomLoad().getRoomsIds());
+        occupancyCacheService.evictRooms(oldRoomIds);
 
         return bookingMapper.toBookingDetails(resources.booking());
     }

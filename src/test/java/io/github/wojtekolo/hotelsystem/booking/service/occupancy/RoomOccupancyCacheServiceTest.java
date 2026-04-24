@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.CacheManager;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,9 +29,13 @@ class RoomOccupancyCacheServiceTest {
     @Mock
     private RoomRepository roomRepository;
 
+    @Mock
+    private CacheManager cacheManager;
+
+
     @BeforeEach
     public void setup() {
-        cacheService = new RoomOccupancyCacheService(roomStayRepository, roomRepository);
+        cacheService = new RoomOccupancyCacheService(roomStayRepository, roomRepository, cacheManager);
     }
 
         @Test
