@@ -13,6 +13,7 @@ import io.github.wojtekolo.hotelsystem.customer.model.Customer;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.room.api.OccupancyQuery;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -145,7 +146,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
 
         occupancyService.getRoomOccupancy(roomId, new OccupancyQuery(today, today.plusDays(30), null));
 
-        org.awaitility.Awaitility.await()
+        Awaitility.await()
                 .atMost(java.time.Duration.ofSeconds(2))
                 .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(roomId) != null);
 

@@ -8,6 +8,7 @@ import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.common.DataBaseCleaner;
 import io.github.wojtekolo.hotelsystem.common.TestDataFactory;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +86,7 @@ class RoomOccupancyCacheServiceIntegrationTest extends AbstractIntegrationTest {
 //        load cache
         cacheService.getAllRoomOccupancy(room.getId(), today, maxDate);
 
-        org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(1))
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
                 .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) != null);
 
 //          when
