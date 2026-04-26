@@ -1,7 +1,7 @@
 package io.github.wojtekolo.hotelsystem.room.api;
 
 import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
-import io.github.wojtekolo.hotelsystem.booking.service.availability.RoomAvailabilityService;
+import io.github.wojtekolo.hotelsystem.booking.service.occupancy.RoomOccupancyService;
 import io.github.wojtekolo.hotelsystem.room.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import java.net.URI;
 public class RoomController {
 
     private final RoomService roomService;
-    private final RoomAvailabilityService availabilityService;
+    private final RoomOccupancyService occupancyService;
 
     @GetMapping
     public ResponseEntity<Slice<RoomListItem>> getRooms(@PageableDefault(page = 0, size = 20, sort = "id") Pageable pageable) {
@@ -42,6 +42,6 @@ public class RoomController {
 
     @GetMapping("/{roomId}/occupancy")
     public ResponseEntity<RoomOccupancyResponse> getRoomOccupancy(@PathVariable Long roomId, @Valid OccupancyQuery query) {
-        return ResponseEntity.ok(availabilityService.getRoomOccupancy(roomId, query));
+        return ResponseEntity.ok(occupancyService.getRoomOccupancy(roomId, query));
     }
 }

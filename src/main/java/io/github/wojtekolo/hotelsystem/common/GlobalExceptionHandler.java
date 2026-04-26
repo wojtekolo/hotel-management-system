@@ -2,7 +2,9 @@ package io.github.wojtekolo.hotelsystem.common;
 
 import io.github.wojtekolo.hotelsystem.booking.api.error.BookingFailedValidationResponse;
 import io.github.wojtekolo.hotelsystem.booking.exception.BookingValidationException;
+import io.github.wojtekolo.hotelsystem.booking.exception.InvalidBookingDateException;
 import io.github.wojtekolo.hotelsystem.common.exceptions.*;
+import io.github.wojtekolo.hotelsystem.room.api.error.RoomOccupancyErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -75,6 +77,15 @@ public class GlobalExceptionHandler {
                 ex.getInternalConflicts(),
                 ex.getRoomStayViolationsDetails(),
                 ex.getIntegrityViolationsDetails()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(InvalidBookingDateException.class)
+    public ResponseEntity<RoomOccupancyErrorResponse> handleBookingConflict(InvalidBookingDateException ex){
+        var response = new RoomOccupancyErrorResponse(
+                ex.getMessage(),
+                ex.getDetails()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
