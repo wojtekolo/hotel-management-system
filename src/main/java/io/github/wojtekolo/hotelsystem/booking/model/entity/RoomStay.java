@@ -22,6 +22,10 @@ import java.util.Optional;
 @NoArgsConstructor
 @Builder
 @Getter
+@Table(name = "room_stay", indexes = {
+        @Index(name = "idx_room_stay_room_id", columnList = "room_id"),
+        @Index(name = "idx_room_stay_dates", columnList = "active_from, active_to")
+})
 public class RoomStay {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -95,15 +99,15 @@ public class RoomStay {
 
     private static RoomStay create(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight, RoomStayStatus status) {
         return RoomStay.builder()
-                       .booking(booking)
-                       .room(room)
-                       .pricePerNight(calculatePricePerNight(room.getType()
-                                                                 .getPricePerNight(), discount, customPricePerNight))
-                       .activeFrom(from)
-                       .activeTo(to)
-                       .status(status)
-                       .createBy(employee)
-                       .build();
+                .booking(booking)
+                .room(room)
+                .pricePerNight(calculatePricePerNight(room.getType()
+                        .getPricePerNight(), discount, customPricePerNight))
+                .activeFrom(from)
+                .activeTo(to)
+                .status(status)
+                .createBy(employee)
+                .build();
     }
 
     public BigDecimal calculateTotalCost() {
