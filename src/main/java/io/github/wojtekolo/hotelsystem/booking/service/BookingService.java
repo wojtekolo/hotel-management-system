@@ -6,6 +6,7 @@ import io.github.wojtekolo.hotelsystem.booking.api.response.BookingDetails;
 import io.github.wojtekolo.hotelsystem.booking.exception.details.RoomStayViolationDetails;
 import io.github.wojtekolo.hotelsystem.booking.persistence.BookingRepository;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
+import io.github.wojtekolo.hotelsystem.booking.service.event.RoomsOccupancyChangedEvent;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResourceLoader;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResources;
 import io.github.wojtekolo.hotelsystem.booking.service.occupancy.RoomOccupancyCacheService;
@@ -14,10 +15,10 @@ import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidat
 import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class BookingService {
     private final BookingValidator bookingValidator;
     private final BookingStayProcessor bookingStayProcessor;
     private final BookingResourceLoader bookingResourceLoader;
-    private final RoomOccupancyCacheService occupancyCacheService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public BookingDetails addBooking(BookingCreateRequest request) {
@@ -44,7 +45,7 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
 
-        occupancyCacheService.evictRooms(resources.roomLoad().getRoomsIds());
+        applicationEventPublisher.publishEvent(new RoomsOccupancyChangedEvent(resources.roomLoad().getRoomsIds()));
 
         return bookingMapper.toBookingDetails(booking);
     }
@@ -63,7 +64,7 @@ public class BookingService {
 
         bookingRepository.save(resources.booking());
 
-        occupancyCacheService.evictRooms(resources.roomLoad().getRoomsIds());
+        applicationEventPublisher.publishEvent(new RoomsOccupancyChangedEvent(resources.roomLoad().getRoomsIds()));
 
         return bookingMapper.toBookingDetails(resources.booking());
     }
