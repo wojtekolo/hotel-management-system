@@ -59,7 +59,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
     }
 
     @Test
-    public void should_evict_cache_when_creating_booking(){
+    public void should_invalidate_cache_when_creating_booking(){
 //        given
         Room room = data.prepareRoom();
         Employee employee = data.prepareEmployee();
@@ -81,7 +81,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
     }
 
     @Test
-    public void should_evict_cache_for_old_and_new_room_when_deleting_and_adding_room_stay_to_existing_booking(){
+    public void should_invalidate_cache_for_old_and_new_room_when_deleting_and_adding_room_stay_to_existing_booking(){
 //        given
         Room room1 = data.prepareRoom();
         Room room2 = data.prepareRoom();
@@ -113,7 +113,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
     }
 
     @Test
-    public void should_evict_cache_when_updating_existing_room_stay(){
+    public void should_invalidate_cache_when_updating_existing_room_stay(){
 //        given
         Room room = data.prepareRoom();
         Employee employee = data.prepareEmployee();

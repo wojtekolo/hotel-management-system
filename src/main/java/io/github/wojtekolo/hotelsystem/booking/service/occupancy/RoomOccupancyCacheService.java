@@ -34,7 +34,7 @@ public class RoomOccupancyCacheService {
         );
     }
 
-    public void evictRooms(Set<Long> ids){
+    public void invalidateRooms(Set<Long> ids){
         Cache cache = cacheManager.getCache(CACHE_NAME);
         if (cache != null) {
             ids.forEach(cache::evict);

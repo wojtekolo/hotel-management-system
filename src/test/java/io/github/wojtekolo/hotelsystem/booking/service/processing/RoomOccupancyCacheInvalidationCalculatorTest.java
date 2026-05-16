@@ -14,9 +14,9 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-class RoomOccupancyCacheEvictionCalculatorTest {
+class RoomOccupancyCacheInvalidationCalculatorTest {
 
-    private final RoomOccupancyCacheEvictionCalculator calculator = new RoomOccupancyCacheEvictionCalculator();
+    private final RoomOccupancyCacheInvalidationCalculator calculator = new RoomOccupancyCacheInvalidationCalculator();
     private final LocalDate today = LocalDate.now();
 
     @Test

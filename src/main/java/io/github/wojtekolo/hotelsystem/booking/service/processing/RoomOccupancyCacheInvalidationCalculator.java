@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
-public class RoomOccupancyCacheEvictionCalculator {
+public class RoomOccupancyCacheInvalidationCalculator {
     public Set<Long> calculateAffectedRoomIds(Booking booking, List<RoomStayUpdateRequest> requests) {
         Set<Long> affectedRoomIds = new HashSet<>();
 

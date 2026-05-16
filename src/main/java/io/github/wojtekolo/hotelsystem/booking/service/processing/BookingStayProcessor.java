@@ -20,7 +20,7 @@ import java.util.*;
 public class BookingStayProcessor {
     private final BookingCommandMaker commandMaker;
     private final BookingErrorMapper errorMapper;
-    private final RoomOccupancyCacheEvictionCalculator evictionCalculator;
+    private final RoomOccupancyCacheInvalidationCalculator invalidationCalculator;
 
     public List<RoomStayViolationDetails> createBooking(Booking booking, List<RoomStayCreateRequest> requests, Employee employee, Map<Long, Room> rooms) {
         List<RoomStayCreateCommand> createCommands = requests.stream().map(commandMaker::fromCreateRequest).toList();
@@ -31,7 +31,7 @@ public class BookingStayProcessor {
         List<RoomStayViolationDetails> invalidIds = verifyStayIds(booking, requests);
         if (!invalidIds.isEmpty()) return new BookingProcessingResult(invalidIds, null);
 
-        Set<Long> affectedRooms = evictionCalculator.calculateAffectedRoomIds(booking, requests);
+        Set<Long> affectedRooms = invalidationCalculator.calculateAffectedRoomIds(booking, requests);
 
         List<RoomStayViolation> violations = processBookingChanges(booking, requests, employee, rooms);
         return new BookingProcessingResult(errorMapper.mapToErrorCodes(violations), affectedRooms);

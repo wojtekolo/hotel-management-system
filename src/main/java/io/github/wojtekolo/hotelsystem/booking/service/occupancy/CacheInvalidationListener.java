@@ -13,6 +13,6 @@ public class CacheInvalidationListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRoomsOccupancyChange(RoomsOccupancyChangedEvent event){
-        cacheService.evictRooms(event.roomIds());
+        cacheService.invalidateRooms(event.roomIds());
     }
 }
