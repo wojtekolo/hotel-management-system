@@ -52,8 +52,6 @@ public class BookingService {
     @Transactional
     public BookingDetails updateBooking(Long bookingId, BookingUpdateRequest request) {
         BookingResources resources = bookingResourceLoader.loadForUpdate(bookingId, request);
-        Set<Long> oldRoomIds = resources.booking().getStays().stream()
-                .map(stay -> stay.getRoom().getId()).collect(Collectors.toSet());
 
         List<RoomStayViolationDetails> updateErrors = bookingStayProcessor.updateBooking(
                 resources.booking(), request.stays(), resources.employee(), resources.roomLoad().rooms());
@@ -66,7 +64,6 @@ public class BookingService {
         bookingRepository.save(resources.booking());
 
         occupancyCacheService.evictRooms(resources.roomLoad().getRoomsIds());
-        occupancyCacheService.evictRooms(oldRoomIds);
 
         return bookingMapper.toBookingDetails(resources.booking());
     }
