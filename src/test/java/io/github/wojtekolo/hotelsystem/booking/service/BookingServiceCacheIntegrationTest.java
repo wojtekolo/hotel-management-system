@@ -77,6 +77,9 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.addBooking(bookingCreateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId())).isNull();
     }
 
@@ -108,6 +111,10 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.updateBooking(bookingToUpdate.getId(), updateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room1.getId()) == null
+                  && cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room2.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room1.getId())).isNull();
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room2.getId())).isNull();
     }
@@ -137,6 +144,9 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.updateBooking(bookingToUpdate.getId(), updateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId())).isNull();
     }
 
