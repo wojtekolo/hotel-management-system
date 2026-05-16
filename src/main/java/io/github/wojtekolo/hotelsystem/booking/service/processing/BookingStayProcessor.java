@@ -7,7 +7,6 @@ import io.github.wojtekolo.hotelsystem.booking.exception.details.RoomStayViolati
 import io.github.wojtekolo.hotelsystem.booking.model.commands.RoomStayCreateCommand;
 import io.github.wojtekolo.hotelsystem.booking.model.commands.RoomStayUpdateCommand;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
-import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.model.violations.RoomStayViolation;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
@@ -15,14 +14,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
 public class BookingStayProcessor {
     private final BookingCommandMaker commandMaker;
     private final BookingErrorMapper errorMapper;
+    private final RoomOccupancyCacheEvictionCalculator evictionCalculator;
 
     public List<RoomStayViolationDetails> createBooking(Booking booking, List<RoomStayCreateRequest> requests, Employee employee, Map<Long, Room> rooms) {
         List<RoomStayCreateCommand> createCommands = requests.stream().map(commandMaker::fromCreateRequest).toList();
@@ -33,7 +31,7 @@ public class BookingStayProcessor {
         List<RoomStayViolationDetails> invalidIds = verifyStayIds(booking, requests);
         if (!invalidIds.isEmpty()) return new BookingProcessingResult(invalidIds, null);
 
-        Set<Long> affectedRooms = calculateAffectedRoomIds(booking, requests);
+        Set<Long> affectedRooms = evictionCalculator.calculateAffectedRoomIds(booking, requests);
 
         List<RoomStayViolation> violations = processBookingChanges(booking, requests, employee, rooms);
         return new BookingProcessingResult(errorMapper.mapToErrorCodes(violations), affectedRooms);
@@ -52,43 +50,6 @@ public class BookingStayProcessor {
                          .toList();
     }
 
-    private Set<Long> calculateAffectedRoomIds(Booking booking, List<RoomStayUpdateRequest> requests) {
-        Set<Long> affectedRoomIds = new HashSet<>();
-
-        Map<Long, RoomStayUpdateRequest> requestIds = requests.stream()
-                                                              .filter(req -> req.id() != null)
-                                                              .collect(Collectors.toMap(RoomStayUpdateRequest::id, req -> req));
-
-//        Deleted stays
-        affectedRoomIds.addAll(booking.getStays().stream()
-                                      .filter(stay -> !requestIds.containsKey(stay.getId()))
-                                      .filter(stay -> stay.getStatus() != RoomStayStatus.CANCELLED)
-                                      .map(stay -> stay.getRoom().getId())
-                                      .toList());
-
-//        Updated stays
-        affectedRoomIds.addAll(booking.getStays().stream()
-                                      .filter(stay -> requestIds.containsKey(stay.getId()))
-                                      .filter(stay -> {
-                                          RoomStayUpdateRequest request = requestIds.get(stay.getId());
-                                          return !Objects.equals(stay.getRoom().getId(), request.roomId()) ||
-                                                  !Objects.equals(stay.getActiveFrom(), request.from()) ||
-                                                  !Objects.equals(stay.getActiveTo(), request.to());
-                                      })
-                                      .flatMap(stay -> Stream.of(
-                                              stay.getRoom().getId(),
-                                              requestIds.get(stay.getId()).roomId()
-                                      ))
-                                      .toList());
-
-//        New stays
-        affectedRoomIds.addAll(requests.stream()
-                                       .filter(request -> request.id() == null)
-                                       .map(RoomStayUpdateRequest::roomId)
-                                       .toList());
-
-        return affectedRoomIds;
-    }
 
     private List<RoomStayViolation> processBookingChanges(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
         List<RoomStayViolation> violations = new ArrayList<>();
