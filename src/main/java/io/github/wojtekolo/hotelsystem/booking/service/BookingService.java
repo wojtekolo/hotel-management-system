@@ -9,7 +9,7 @@ import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
 import io.github.wojtekolo.hotelsystem.booking.service.event.RoomsOccupancyChangedEvent;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResourceLoader;
 import io.github.wojtekolo.hotelsystem.booking.service.loading.BookingResources;
-import io.github.wojtekolo.hotelsystem.booking.service.occupancy.RoomOccupancyCacheService;
+import io.github.wojtekolo.hotelsystem.booking.service.processing.BookingProcessingResult;
 import io.github.wojtekolo.hotelsystem.booking.service.processing.BookingStayProcessor;
 import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidationResult;
 import io.github.wojtekolo.hotelsystem.booking.service.validation.BookingValidator;
@@ -54,17 +54,17 @@ public class BookingService {
     public BookingDetails updateBooking(Long bookingId, BookingUpdateRequest request) {
         BookingResources resources = bookingResourceLoader.loadForUpdate(bookingId, request);
 
-        List<RoomStayViolationDetails> updateErrors = bookingStayProcessor.updateBooking(
+        BookingProcessingResult result = bookingStayProcessor.updateBooking(
                 resources.booking(), request.stays(), resources.employee(), resources.roomLoad().rooms());
 
         BookingValidationResult validationResult = bookingValidator.validateBooking(resources.booking());
 
-        if (validationResult.hasErrors() || !updateErrors.isEmpty() || !resources.integrityErrors().isEmpty())
-            throw validationResult.toException("Error updating booking", updateErrors, resources.integrityErrors());
+        if (validationResult.hasErrors() || !result.errors().isEmpty() || !resources.integrityErrors().isEmpty())
+            throw validationResult.toException("Error updating booking", result.errors(), resources.integrityErrors());
 
         bookingRepository.save(resources.booking());
 
-        applicationEventPublisher.publishEvent(new RoomsOccupancyChangedEvent(resources.roomLoad().getRoomsIds()));
+        applicationEventPublisher.publishEvent(new RoomsOccupancyChangedEvent(result.affectedRoomIds()));
 
         return bookingMapper.toBookingDetails(resources.booking());
     }
