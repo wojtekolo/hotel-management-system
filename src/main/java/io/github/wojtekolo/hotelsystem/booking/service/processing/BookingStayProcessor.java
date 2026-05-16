@@ -20,19 +20,40 @@ import java.util.*;
 public class BookingStayProcessor {
     private final BookingCommandMaker commandMaker;
     private final BookingErrorMapper errorMapper;
+    private final RoomOccupancyCacheInvalidationCalculator invalidationCalculator;
 
     public List<RoomStayViolationDetails> createBooking(Booking booking, List<RoomStayCreateRequest> requests, Employee employee, Map<Long, Room> rooms) {
         List<RoomStayCreateCommand> createCommands = requests.stream().map(commandMaker::fromCreateRequest).toList();
         return errorMapper.mapToErrorCodes(booking.addNewStays(createCommands, employee, rooms));
     }
 
-    public List<RoomStayViolationDetails> updateBooking(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
-        List<Long> idsToKeep = requests.stream().map(RoomStayUpdateRequest::id).filter(Objects::nonNull).toList();
+    public BookingProcessingResult updateBooking(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
+        List<RoomStayViolationDetails> invalidIds = verifyStayIds(booking, requests);
+        if (!invalidIds.isEmpty()) return new BookingProcessingResult(invalidIds, null);
 
-        List<RoomStayViolationDetails> idErrors = verifyStayIds(booking, requests);
-        if (!idErrors.isEmpty()) return idErrors;
+        Set<Long> affectedRooms = invalidationCalculator.calculateAffectedRoomIds(booking, requests);
 
+        List<RoomStayViolation> violations = processBookingChanges(booking, requests, employee, rooms);
+        return new BookingProcessingResult(errorMapper.mapToErrorCodes(violations), affectedRooms);
+    }
+
+    private List<RoomStayViolationDetails> verifyStayIds(Booking booking, List<RoomStayUpdateRequest> requests) {
+        List<Long> existingIdsInBooking = booking.getStaysIds();
+
+        List<Long> invalidIds = requests.stream()
+                                        .map(RoomStayUpdateRequest::id)
+                                        .filter(Objects::nonNull)
+                                        .filter(id -> !existingIdsInBooking.contains(id))
+                                        .toList();
+        return invalidIds.stream()
+                         .map(id -> new RoomStayViolationDetails(id, null, RoomStayViolationCode.STAY_NOT_FOUND_IN_BOOKING, null))
+                         .toList();
+    }
+
+
+    private List<RoomStayViolation> processBookingChanges(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
         List<RoomStayViolation> violations = new ArrayList<>();
+        List<Long> idsToKeep = requests.stream().map(RoomStayUpdateRequest::id).filter(Objects::nonNull).toList();
 
 //        Delete
         violations.addAll(booking.deleteStaysExceptFor(idsToKeep));
@@ -52,19 +73,6 @@ public class BookingStayProcessor {
                 .map(commandMaker::prepareCreateCommand).toList();
         violations.addAll(booking.addNewStays(createCommands, employee, rooms));
 
-        return errorMapper.mapToErrorCodes(violations);
-    }
-
-    private List<RoomStayViolationDetails> verifyStayIds(Booking booking, List<RoomStayUpdateRequest> requests){
-        List<Long> existingIdsInBooking = booking.getStaysIds();
-
-        List<Long> invalidIds = requests.stream()
-                                        .map(RoomStayUpdateRequest::id)
-                                        .filter(Objects::nonNull)
-                                        .filter(id -> !existingIdsInBooking.contains(id))
-                                        .toList();
-        return invalidIds.stream()
-                         .map(id -> new RoomStayViolationDetails(id, null, RoomStayViolationCode.STAY_NOT_FOUND_IN_BOOKING, null))
-                         .toList();
+        return violations;
     }
 }

@@ -59,7 +59,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
     }
 
     @Test
-    public void should_evict_cache_when_creating_booking(){
+    public void should_invalidate_cache_when_creating_booking(){
 //        given
         Room room = data.prepareRoom();
         Employee employee = data.prepareEmployee();
@@ -77,11 +77,14 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.addBooking(bookingCreateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId())).isNull();
     }
 
     @Test
-    public void should_evict_cache_for_old_and_new_room_when_deleting_and_adding_room_stay_to_existing_booking(){
+    public void should_invalidate_cache_for_old_and_new_room_when_deleting_and_adding_room_stay_to_existing_booking(){
 //        given
         Room room1 = data.prepareRoom();
         Room room2 = data.prepareRoom();
@@ -108,12 +111,16 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.updateBooking(bookingToUpdate.getId(), updateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room1.getId()) == null
+                  && cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room2.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room1.getId())).isNull();
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room2.getId())).isNull();
     }
 
     @Test
-    public void should_evict_cache_when_updating_existing_room_stay(){
+    public void should_invalidate_cache_when_updating_existing_room_stay(){
 //        given
         Room room = data.prepareRoom();
         Employee employee = data.prepareEmployee();
@@ -137,6 +144,9 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         bookingService.updateBooking(bookingToUpdate.getId(), updateRequest);
 
 //        then
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(2))
+                  .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) == null);
+
         assertThat(cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId())).isNull();
     }
 
