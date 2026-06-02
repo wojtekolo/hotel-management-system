@@ -13,7 +13,8 @@ public class RoomOccupancySimulation extends Simulation {
 
     HttpProtocolBuilder httpProtocol = http
             .baseUrl("http://localhost:8080")
-            .acceptHeader("application/json");
+            .acceptHeader("application/json")
+            .shareConnections();
 
     FeederBuilder<Object> roomFeeder = jdbcFeeder(
             "jdbc:postgresql://localhost:5432/hotel_system",
@@ -31,6 +32,6 @@ public class RoomOccupancySimulation extends Simulation {
                     .check(status().is(200))).pause(1);
 
     {
-        setUp(scn.injectClosed(constantConcurrentUsers(100).during(60))).protocols(httpProtocol);
+        setUp(scn.injectOpen(rampUsersPerSec(1).to(200).during(300))).protocols(httpProtocol);
     }
 }
