@@ -41,6 +41,31 @@ Following indexes were applied and tested:
 ### Redis Cache
 To reduce latency and database load, a Redis cache was implemented on room occupancy search.
 
+### Flow diagram
+```mermaid
+flowchart TD
+    Gatling["Gatling Client (50/200/1000 RPS)"] -->|"HTTP GET /api/v1/rooms/{roomId}/occupancy"| Tomcat["Tomcat Pool (max 200)"]
+    
+    subgraph App["Spring Boot Application Container"]
+        Tomcat --> Controller["Room Controller"]
+        Controller --> Service["Room Occupancy Service"]
+        Service --> CacheService["Room Occupancy Cache Service"]
+    end
+
+    subgraph Cache["Cache Layer"]
+        CacheService --> Redis{{"Redis Cache"}}
+        Redis -->|Cache HIT| CacheService
+    end
+
+    subgraph DB["Persistent Database"]
+        Redis -->|Cache MISS| Postgres[("PostgreSQL (3.3M Stays)")]
+    end
+
+    style Gatling fill:#ff9900,stroke:#333,stroke-width:2px
+    style Redis fill:#d82c20,stroke:#fff,stroke-width:2px,color:#fff
+    style Postgres fill:#336791,stroke:#fff,stroke-width:2px,color:#fff
+```
+
 ### Test Methodology
 Before the tests, the database was populated with dataset with following size:
 
