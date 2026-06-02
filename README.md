@@ -44,51 +44,58 @@ To reduce latency and database load, a Redis cache was implemented on room occup
 ### Test Methodology
 Before the tests, the database was populated with dataset with following size:
 
-| Entity | Count |
-| :--- | :--- |
-| **Total Rooms** | 1,000 |
-| **Planned Room Stays** | 200,000 |
-| **Cancelled Room Stays** | 100,000 |
+| Entity                    | Count     |
+|:--------------------------|:----------|
+| **Total Rooms**           | 1,000     |
+| **Planned Room Stays**    | 300,000   |
+| **Historical Room Stays** | 3,000,000 |
 
 The performance was tested using Gatling to simulate real-world traffic and measure how the database
-and cache handle constant load.
+and cache handle load.
 
-* **Load:** 100 concurrent users.
-* **Duration:** 60 seconds.
+* **Load:** Linear ramp up of users per second, starting from 1 up to the target (50, 200, 1,000).
+* **Duration:** 300 seconds of continuous load generation.
 * **Scenario:** Each user picks a random room from the database, checks its availability
-for a full month (the full year is cached regardless of the requested range),
-waits for 1 second, and repeats.
+  for a full month (the full year ahead is cached regardless of the requested range).
+
+### Runtime Environment
+#### Hardware Specs
+* **CPU:** Intel Core i5 7400F @ 2.90GHz
+* **RAM:** 16GB DDR4
+* **Storage:** NVMe M.2 SSD PCIe 3.0
+
+#### Infrastructure Configuration
+* **HikariCP Connection Pool:** maximum-pool-size: 10 (default)
+* **Embedded Tomcat:** 200 max threads (default)
+* **Gatling Client:** `shareConnections` enabled
 
 ### Results
 
-| Configuration            | P95 (Trial 1/2/3) | Avg P95 | P99 (Trial 1/2/3) | Avg P99 |
-|:-------------------------| :--- | :--- | :--- | :--- |
-| **Cache + Index**        | 7 / 10 / 7 | **8.0 ms** | 9 / 13 / 10 | **10.6 ms** |
-| **No Cache + Index**     | 11 / 6 / 7 | **8.0 ms** | 16 / 9 / 9 | **11.3 ms** |
-| **Hot Cache + No Index** | 13 / 7 / 8 | **9.3 ms** | 19 / 11 / 16 | **15.3 ms** |
-| **Cache + No Index**     | 47 / 46 / 48 | **47.0 ms** | 76 / 112 / 108 | **98.6 ms** |
-| **No Cache + No Index**  | 167 / 150 / 192 | **169.6 ms** | 216 / 193 / 262 | **223.6 ms** |
+| ID | Configuration | Target RPS | Total Requests |           Success Rate            | Min (ms) | P50 (ms) | P95 (ms) | P99 (ms) | Max (ms) |
+|:---|:---|:---:|:---:|:---------------------------------:|:---:|:---:|:---:|:--------:|:--------:|
+| **1** | No Cache + No Indexes | 50 | 7,650 |   44.56% (3,409 OK / 4,241 KO)    | 119 | 60,002 | 60,014 |  60,021  |  60,072  |
+| **2** | No Cache + Indexes | 50 | 7,650 |      100% (7,650 OK / 0 KO)       | 2 | 11 | 14 |    18    |   509    |
+| **3** | Redis Cache + No Indexes | 50 | 7,650 |      100% (7,650 OK / 0 KO)       | 2 | 3 | 148 |   174    |  1,040   |
+| **4** | Redis Cache + Indexes | 50 | 7,650 |      100% (7,650 OK / 0 KO)       | 1 | 4 | 16 |    19    |  1,096   |
+| **5** | No Cache + No Indexes | 200 | 30,150 |   6.52% (1,965 OK / 28,185 KO)    | 3 | 60,004 | 60,015 |  60,029  |  60,173  |
+| **6** | No Cache + Indexes | 200 | 30,150 |     100% (30,150 OK / 0 KO)     | 2 | 12 | 18 |   321    |  5,882   |
+| **7** | Redis Cache + No Indexes | 200 | 30,150 |     100% (30,150 OK / 0 KO)     | 1 | 3 | 8 | 1,495  |  4,175   |
+| **8** | Redis Cache + Indexes | 200 | 30,150 |    100% (30,150 OK / 0 KO)    | 1 | 3 | 5 |    16    |   917    |
+| **9** | Redis Cache + Indexes | 1,000 | 150,150 |    100% (150,150 OK / 0 KO)     | 1 | 4 | 7 |    12    |  1,805   |
+| **10** | No Cache + Indexes | 1,000 | 150,150 | 25.40% (38,138 OK / 112,012 KO) | 0 | 1,183 | 60,375 |  62,274  |  63,360  |
 
 #### Key Takeaways:
-* **Database Indexing:** Adding indexes was the most impactful optimization, reducing latency by ~95%.
-* **Redis Performance:** In a realistic scenario with initial cache-misses,
-Redis reduced P95 latency by ~72%. However, in a scenario with cache fully loaded,
-the performance gain reaches ~94%, almost matching the efficiency of an indexed database.
-* **Conclusion:** The benchmarks prove that caching is not a substitute for
-proper database design in case of simple queries, but rather an addition for high-scale stability.
+* **No Cache + No Indexes (Tests 1 & 5):** System fails. Success rates drop to 44.56% at 50 RPS and 6.52% at 200 RPS.
+* **No Redis + Indexes (Tests 2 & 6):** 100% success up to 200 RPS, but at 200 RPS max latency spikes to 5.8 seconds.
+* **Redis + No Indexes (Test 7):** 100% success at 200 RPS, but initial cache misses spike max latency to 4.1 seconds.
+* **Redis + Indexes (Tests 8 & 9):** 100% success. At 200 RPS, P99 latency is 16 ms. At 1,000 RPS, the system processes
+150k requests with a 12 ms P99.
+* **No Redis + Indexes with 1,000 RPS (Test 10):** System fails. Success rate drops to 25.40% due to connection refused,
+premature close, and socket errors.
 
-### Reproduce results
-1. Start the database container:
-`docker compose up -d postgres-db redis`
-2. Populate the database:
-`mvn spring-boot:run "-Dspring-boot.run.profiles=seed"` \
-*Note: Stop this process (Ctrl+C) after seeding is finished to free up port 8080.*
-3. Start the app:
-`docker compose up --build backend`
-4. Run test:
-`mvn gatling:test`
-5. To turn Redis cache off navigate to: `src\main\resources\application.properties`\
-   and change the `spring.cache.type` property from `redis` to `none`
+#### Conclusion
+Both optimizations are mandatory for high-scale traffic. Database indexes prevent system collapse during cold starts
+and cache misses, while Redis cache absorbs high-volume traffic to protect the database connection limits.
 
 ## Getting Started
 
