@@ -28,3 +28,6 @@ INSERT INTO employee (id,employee_role,hire_date,id_card_number,pesel,work_email
 values (2,'CASHIER','2020-10-10', '1231','12345678912',
         'employee@email.com', '111222333')
 ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE booking ALTER COLUMN create_employee_id DROP NOT NULL;
+ALTER TABLE room_stay ALTER COLUMN create_employee_id DROP NOT NULL;

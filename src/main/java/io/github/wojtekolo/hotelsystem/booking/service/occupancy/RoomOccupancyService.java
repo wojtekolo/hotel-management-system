@@ -1,6 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.service.occupancy;
 
-import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
+import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRangeResponse;
 import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
 import io.github.wojtekolo.hotelsystem.booking.config.BookingProperties;
 import io.github.wojtekolo.hotelsystem.booking.exception.InvalidBookingDateException;
@@ -26,12 +26,13 @@ public class RoomOccupancyService {
         LocalDate maxDate = today.plusDays(bookingProperties.getMaxDays());
         validateQuery(q, today, maxDate);
 
-        RoomOccupancyResponse allOccupancy = cacheService
+        RoomOccupancyData allOccupancy = cacheService
                 .getAllRoomOccupancy(roomId, today, maxDate);
 
-        List<OccupiedRange> relevantOccupancy = allOccupancy.occupiedRanges().stream()
+        List<OccupiedRangeResponse> relevantOccupancy = allOccupancy.occupiedRanges().stream()
                 .filter(range -> !Objects.equals(range.bookingId(), q.excludeBookingId()))
                 .filter(range -> range.from().isBefore(q.to()) && range.to().isAfter(q.from()))
+                .map(range -> new OccupiedRangeResponse(range.from(), range.to()))
                 .toList();
 
         return new RoomOccupancyResponse(roomId, q.from(), q.to(), relevantOccupancy);

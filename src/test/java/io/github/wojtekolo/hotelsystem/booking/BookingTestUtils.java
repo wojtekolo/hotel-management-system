@@ -22,7 +22,6 @@ import java.util.List;
 
 public class BookingTestUtils {
 
-    public static final Long DEFAULT_EMPLOYEE_ID = 1L;
     public static final Long DEFAULT_CUSTOMER_ID = 20L;
 
     public static Booking.BookingBuilder aValidBooking(Customer customer, Employee createEmployee) {
@@ -109,42 +108,27 @@ public class BookingTestUtils {
     public static BookingCreateRequest createBookingCreateRequest(List<RoomStayCreateRequest> stayRequests) {
         return new BookingCreateRequest(
                 DEFAULT_CUSTOMER_ID,
-                DEFAULT_EMPLOYEE_ID,
                 stayRequests
         );
     }
 
-    public static BookingUpdateRequest createBookingUpdateRequest(Long employeeId, List<RoomStayUpdateRequest> stayRequests) {
-        return new BookingUpdateRequest(
-                employeeId,
-                stayRequests
-        );
+    public static BookingUpdateRequest createBookingUpdateRequest(List<RoomStayUpdateRequest> stayRequests) {
+        return new BookingUpdateRequest(stayRequests);
     }
 
     public static RoomStayCreateRequest createRoomStayCreateRequest(Long roomId) {
         return createRoomStayCreateRequest(
                 roomId,
                 null,
-                null,
                 null
         );
     }
 
     public static RoomStayCreateRequest createRoomStayCreateRequest(Long roomId, LocalDate from, LocalDate to) {
-        return createRoomStayCreateRequest(
-                roomId,
-                from,
-                to,
-                null
-        );
-    }
-
-    public static RoomStayCreateRequest createRoomStayCreateRequest(Long roomId, LocalDate from, LocalDate to, BigDecimal pricePerNight) {
         return new RoomStayCreateRequest(
                 roomId,
                 from,
-                to,
-                pricePerNight
+                to
         );
     }
 
@@ -153,8 +137,7 @@ public class BookingTestUtils {
                 id,
                 roomId,
                 from,
-                to,
-                null
+                to
         );
     }
 
@@ -162,7 +145,6 @@ public class BookingTestUtils {
         return new RoomStayUpdateRequest(
                 null,
                 roomId,
-                null,
                 null,
                 null
         );

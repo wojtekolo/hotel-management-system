@@ -7,6 +7,6 @@ public record RoomOccupancyResponse(
         Long roomId,
         LocalDate searchFrom,
         LocalDate searchTo,
-        List<OccupiedRange> occupiedRanges
+        List<OccupiedRangeResponse> occupiedRanges
 ) {
 }

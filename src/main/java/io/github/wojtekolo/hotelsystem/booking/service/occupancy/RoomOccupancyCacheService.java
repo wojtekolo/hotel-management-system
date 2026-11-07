@@ -1,6 +1,5 @@
 package io.github.wojtekolo.hotelsystem.booking.service.occupancy;
 
-import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.common.exceptions.ResourceNotFoundException;
@@ -23,9 +22,9 @@ public class RoomOccupancyCacheService {
     public static final String CACHE_NAME = "occupancy";
 
     @Cacheable(value = CACHE_NAME, key = "#roomId")
-    public RoomOccupancyResponse getAllRoomOccupancy(Long roomId, LocalDate from, LocalDate to) {
+    public RoomOccupancyData getAllRoomOccupancy(Long roomId, LocalDate from, LocalDate to) {
         if (!roomRepository.existsById(roomId)) throw new ResourceNotFoundException("Room not found ID: " + roomId);
-        return new RoomOccupancyResponse(
+        return new RoomOccupancyData(
                 roomId,
                 from,
                 to,

@@ -26,7 +26,7 @@ class BookingRequestHelperTest {
     @Test
     public void should_return_all_ids_when_only_request() {
 //        given
-        BookingCreateRequest request = new BookingCreateRequest(0L, 0L, List.of(
+        BookingCreateRequest request = new BookingCreateRequest(0L, List.of(
                 BookingTestUtils.createRoomStayCreateRequest(1L),
                 BookingTestUtils.createRoomStayCreateRequest(2L),
                 BookingTestUtils.createRoomStayCreateRequest(3L),
@@ -44,7 +44,7 @@ class BookingRequestHelperTest {
     @Test
     public void should_return_all_ids_when_request_and_booking() {
 //        given
-        BookingUpdateRequest request = new BookingUpdateRequest(0L, List.of(
+        BookingUpdateRequest request = new BookingUpdateRequest(List.of(
                 BookingTestUtils.createRoomStayUpdateRequest(1L),
                 BookingTestUtils.createRoomStayUpdateRequest(2L),
                 BookingTestUtils.createRoomStayUpdateRequest(3L),

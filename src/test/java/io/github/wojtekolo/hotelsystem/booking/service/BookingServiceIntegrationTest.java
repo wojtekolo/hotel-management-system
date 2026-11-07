@@ -59,10 +59,9 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
     public void should_persist_single_stay() {
 //        given
         Room room = data.prepareRoom();
-        Employee employee = data.prepareEmployee();
         Customer customer = data.prepareCustomer();
 
-        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
+        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), List.of(
                 createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))
         ));
 
@@ -81,12 +80,14 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(savedBooking.getStays().getFirst().getRoom().getId()).isEqualTo(room.getId());
         assertThat(savedBooking.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
         assertThat(savedBooking.getStatus()).isEqualTo(BookingStatus.PLANNED);
-        assertThat(savedBooking.getCreateBy().getId()).isEqualTo(employee.getId());
+        assertThat(savedBooking.getCreateBy()).isNull();
+        assertThat(savedBooking.getStays().getFirst().getCreateBy()).isNull();
 
         assertThat(result.customerFullName()).isEqualTo(customer.getPerson().getFullName());
+        assertThat(result.createBy()).isNull();
         assertThat(result.stays()).hasSize(1);
         assertThat(result.stays().getFirst().roomName()).isEqualTo(room.getName());
-        assertThat(result.stays().getFirst().createBy()).isEqualTo(employee.getPerson().getFullName());
+        assertThat(result.stays().getFirst().createBy()).isNull();
         assertThat(result.stays().getFirst().checkInBy()).isNull();
     }
 
@@ -95,12 +96,11 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
 //        given
         Room room1 = data.prepareRoom(BigDecimal.valueOf(100));
         Room room2 = data.prepareRoom(BigDecimal.valueOf(10));
-        Employee employee = data.prepareEmployee();
         Customer customer = data.prepareCustomer(BigDecimal.valueOf(0.5));
 
-        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
-                new RoomStayCreateRequest(room1.getId(), today.plusDays(5), today.plusDays(10), null),
-                new RoomStayCreateRequest(room2.getId(), today.plusDays(5), today.plusDays(10), null)
+        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), List.of(
+                new RoomStayCreateRequest(room1.getId(), today.plusDays(5), today.plusDays(10)),
+                new RoomStayCreateRequest(room2.getId(), today.plusDays(5), today.plusDays(10))
         ));
 
 //        when
@@ -114,33 +114,6 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
                 .containsExactlyInAnyOrder(
                         tuple(room1.getId(), new BigDecimal("250.00")),
                         tuple(room2.getId(), new BigDecimal("25.00"))
-                );
-    }
-
-    @Test
-    public void should_calculate_correct_cost_when_discount_and_custom_price() {
-//        given
-        Room room1 = data.prepareRoom(BigDecimal.valueOf(100));
-        Room room2 = data.prepareRoom(BigDecimal.valueOf(10));
-        Employee employee = data.prepareEmployee();
-        Customer customer = data.prepareCustomer(BigDecimal.valueOf(0.5));
-
-        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
-                createRoomStayCreateRequest(room1.getId(), today.plusDays(5), today.plusDays(10), BigDecimal.valueOf(30)),
-                createRoomStayCreateRequest(room2.getId(), today.plusDays(5), today.plusDays(10), BigDecimal.valueOf(40))
-        ));
-
-//        when
-        BookingDetails result = bookingService.addBooking(bookingCreateRequest);
-
-//        then
-        assertThat(result.totalCost()).isEqualByComparingTo(BigDecimal.valueOf(350));
-
-        assertThat(result.stays())
-                .extracting(RoomStayDetails::roomId, RoomStayDetails::totalCost)
-                .containsExactlyInAnyOrder(
-                        tuple(room1.getId(), new BigDecimal("150.00")),
-                        tuple(room2.getId(), new BigDecimal("200.00"))
                 );
     }
 
@@ -160,7 +133,6 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
         entityManager.clear();
 
         BookingUpdateRequest updateRequest = createBookingUpdateRequest(
-                employee.getId(),
                 List.of(
                         createRoomStayUpdateRequest(booking.getStays().getFirst().getId(),
                                 room.getId(), today.plusDays(11), today.plusDays(16))
@@ -185,17 +157,13 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
     public void should_return_all_violations_when_invalid_create_request() {
 //        given
         Long invalidRoomId = 100L;
-        Long invalidEmployeeId = 100L;
         Long invalidCustomerId = 200L;
-        BigDecimal negativePrice = BigDecimal.valueOf(-10);
         LocalDate invalidStartDate = today.minusDays(5);
         LocalDate invalidEndDate = today.minusDays(10);
 
         BookingCreateRequest createRequest = new BookingCreateRequest(
                 invalidCustomerId,
-                invalidEmployeeId,
-                List.of(new RoomStayCreateRequest(invalidRoomId, invalidStartDate,
-                        invalidEndDate, negativePrice)
+                List.of(new RoomStayCreateRequest(invalidRoomId, invalidStartDate, invalidEndDate)
                 )
         );
 
@@ -212,14 +180,12 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
                             .containsExactlyInAnyOrder(
                                     RoomStayViolationCode.END_DATE_IN_THE_PAST,
                                     RoomStayViolationCode.START_DATE_IN_THE_PAST,
-                                    RoomStayViolationCode.END_DATE_NOT_AFTER_START_DATE,
-                                    RoomStayViolationCode.PRICE_NEGATIVE
+                                    RoomStayViolationCode.END_DATE_NOT_AFTER_START_DATE
                             );
                     assertThat(roomStayEx.getIntegrityViolationsDetails())
                             .extracting(IntegrityViolationDetails::code)
                             .containsExactlyInAnyOrder(
                                     IntegrityErrorCode.CUSTOMER_NOT_FOUND,
-                                    IntegrityErrorCode.EMPLOYEE_NOT_FOUND,
                                     IntegrityErrorCode.ROOM_NOT_FOUND
                             );
                 });
@@ -245,15 +211,12 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
 
 
         Long invalidRoomId = 100L;
-        Long invalidEmployeeId = 100L;
-        BigDecimal negativePrice = BigDecimal.valueOf(-10);
         LocalDate invalidStartDate = today.minusDays(5);
         LocalDate invalidEndDate = today.minusDays(10);
 
         BookingUpdateRequest updateRequest = new BookingUpdateRequest(
-                invalidEmployeeId,
                 List.of(new RoomStayUpdateRequest(existingStay.getId(), invalidRoomId, invalidStartDate,
-                        invalidEndDate, negativePrice)
+                        invalidEndDate)
                 )
         );
 
@@ -270,13 +233,11 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
                             .containsExactlyInAnyOrder(
                                     RoomStayViolationCode.END_DATE_IN_THE_PAST,
                                     RoomStayViolationCode.START_DATE_IN_THE_PAST,
-                                    RoomStayViolationCode.END_DATE_NOT_AFTER_START_DATE,
-                                    RoomStayViolationCode.PRICE_NEGATIVE
+                                    RoomStayViolationCode.END_DATE_NOT_AFTER_START_DATE
                             );
                     assertThat(roomStayEx.getIntegrityViolationsDetails())
                             .extracting(IntegrityViolationDetails::code)
                             .containsExactlyInAnyOrder(
-                                    IntegrityErrorCode.EMPLOYEE_NOT_FOUND,
                                     IntegrityErrorCode.ROOM_NOT_FOUND
                             );
                 });
@@ -305,12 +266,12 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
 
         Long invalidStayId = 100L;
 
-        BookingUpdateRequest updateRequest = new BookingUpdateRequest(employee.getId(),
+        BookingUpdateRequest updateRequest = new BookingUpdateRequest(
                 List.of(
                         new RoomStayUpdateRequest(stay1.getId(), room.getId(),
-                                stay1.getActiveFrom(), stay1.getActiveTo().plusDays(2), null),
+                                stay1.getActiveFrom(), stay1.getActiveTo().plusDays(2)),
                         new RoomStayUpdateRequest(invalidStayId, room.getId(),
-                                stay2.getActiveFrom(), stay2.getActiveTo(), null)
+                                stay2.getActiveFrom(), stay2.getActiveTo())
                 )
         );
 
@@ -347,12 +308,9 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
         Room newRoom = data.prepareRoom();
         LocalDate newStart = today.plusDays(20);
         LocalDate newEnd = today.plusDays(25);
-        BigDecimal newPrice = BigDecimal.TEN;
 
         BookingUpdateRequest updateRequest = new BookingUpdateRequest(
-                employee.getId(),
-                List.of(new RoomStayUpdateRequest(existingStay.getId(), newRoom.getId(), newStart,
-                        newEnd, newPrice)
+                List.of(new RoomStayUpdateRequest(existingStay.getId(), newRoom.getId(), newStart, newEnd)
                 )
         );
 
@@ -369,8 +327,7 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
                             .containsExactlyInAnyOrder(
                                     RoomStayViolationCode.ROOM_EDIT_INVALID_STATUS,
                                     RoomStayViolationCode.START_DATE_EDIT_INVALID_STATUS,
-                                    RoomStayViolationCode.END_DATE_EDIT_INVALID_STATUS,
-                                    RoomStayViolationCode.PRICE_EDIT_INVALID_STATUS
+                                    RoomStayViolationCode.END_DATE_EDIT_INVALID_STATUS
                             );
 
                     assertThat(roomStayEx.getIntegrityViolationsDetails())
@@ -397,7 +354,6 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
         entityManager.clear();
 
         BookingUpdateRequest updateRequest = new BookingUpdateRequest(
-                employee.getId(),
                 List.of()
         );
 

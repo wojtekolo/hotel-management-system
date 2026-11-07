@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 public class BookingCommandMaker {
 
     public RoomStayCreateCommand prepareCreateCommand(RoomStayUpdateRequest req) {
-        return new RoomStayCreateCommand(req.roomId(), req.from(), req.to(), req.customPricePerNight());
+        return new RoomStayCreateCommand(req.roomId(), req.from(), req.to());
     }
 
     public RoomStayCreateCommand fromCreateRequest(RoomStayCreateRequest req) {
-        return new RoomStayCreateCommand(req.roomId(), req.from(), req.to(), req.customPricePerNight());
+        return new RoomStayCreateCommand(req.roomId(), req.from(), req.to());
     }
 
     public RoomStayUpdateCommand prepareUpdateCommand(RoomStayUpdateRequest req) {
-        return new RoomStayUpdateCommand(req.id(), req.roomId(), req.from(), req.to(), req.customPricePerNight());
+        return new RoomStayUpdateCommand(req.id(), req.roomId(), req.from(), req.to());
     }
 }

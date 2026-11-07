@@ -8,7 +8,6 @@ import io.github.wojtekolo.hotelsystem.booking.model.commands.RoomStayCreateComm
 import io.github.wojtekolo.hotelsystem.booking.model.commands.RoomStayUpdateCommand;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.violations.RoomStayViolation;
-import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,18 +21,18 @@ public class BookingStayProcessor {
     private final BookingErrorMapper errorMapper;
     private final RoomOccupancyCacheInvalidationCalculator invalidationCalculator;
 
-    public List<RoomStayViolationDetails> createBooking(Booking booking, List<RoomStayCreateRequest> requests, Employee employee, Map<Long, Room> rooms) {
+    public List<RoomStayViolationDetails> createBooking(Booking booking, List<RoomStayCreateRequest> requests, Map<Long, Room> rooms) {
         List<RoomStayCreateCommand> createCommands = requests.stream().map(commandMaker::fromCreateRequest).toList();
-        return errorMapper.mapToErrorCodes(booking.addNewStays(createCommands, employee, rooms));
+        return errorMapper.mapToErrorCodes(booking.addNewStays(createCommands, rooms));
     }
 
-    public BookingProcessingResult updateBooking(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
+    public BookingProcessingResult updateBooking(Booking booking, List<RoomStayUpdateRequest> requests, Map<Long, Room> rooms) {
         List<RoomStayViolationDetails> invalidIds = verifyStayIds(booking, requests);
         if (!invalidIds.isEmpty()) return new BookingProcessingResult(invalidIds, null);
 
         Set<Long> affectedRooms = invalidationCalculator.calculateAffectedRoomIds(booking, requests);
 
-        List<RoomStayViolation> violations = processBookingChanges(booking, requests, employee, rooms);
+        List<RoomStayViolation> violations = processBookingChanges(booking, requests, rooms);
         return new BookingProcessingResult(errorMapper.mapToErrorCodes(violations), affectedRooms);
     }
 
@@ -51,7 +50,7 @@ public class BookingStayProcessor {
     }
 
 
-    private List<RoomStayViolation> processBookingChanges(Booking booking, List<RoomStayUpdateRequest> requests, Employee employee, Map<Long, Room> rooms) {
+    private List<RoomStayViolation> processBookingChanges(Booking booking, List<RoomStayUpdateRequest> requests, Map<Long, Room> rooms) {
         List<RoomStayViolation> violations = new ArrayList<>();
         List<Long> idsToKeep = requests.stream().map(RoomStayUpdateRequest::id).filter(Objects::nonNull).toList();
 
@@ -71,7 +70,7 @@ public class BookingStayProcessor {
                 .stream()
                 .filter(req -> req.id() == null)
                 .map(commandMaker::prepareCreateCommand).toList();
-        violations.addAll(booking.addNewStays(createCommands, employee, rooms));
+        violations.addAll(booking.addNewStays(createCommands, rooms));
 
         return violations;
     }

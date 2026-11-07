@@ -2,7 +2,6 @@ package io.github.wojtekolo.hotelsystem.booking.service.occupancy;
 
 import io.github.wojtekolo.hotelsystem.AbstractIntegrationTest;
 import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
-import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.common.DataBaseCleaner;
@@ -58,7 +57,7 @@ class RoomOccupancyCacheServiceIntegrationTest extends AbstractIntegrationTest {
         LocalDate maxDate = today.plusDays(100);
 
 //        when
-        RoomOccupancyResponse result = cacheService.getAllRoomOccupancy(room.getId(), today, maxDate);
+        RoomOccupancyData result = cacheService.getAllRoomOccupancy(room.getId(), today, maxDate);
 
 //        then
         verify(roomStayRepository, times(1))
@@ -90,7 +89,7 @@ class RoomOccupancyCacheServiceIntegrationTest extends AbstractIntegrationTest {
                 .until(() -> cacheManager.getCache(RoomOccupancyCacheService.CACHE_NAME).get(room.getId()) != null);
 
 //          when
-        RoomOccupancyResponse result = cacheService.getAllRoomOccupancy(room.getId(), today, maxDate);
+        RoomOccupancyData result = cacheService.getAllRoomOccupancy(room.getId(), today, maxDate);
 
 //        then
         verify(roomStayRepository, times(1))

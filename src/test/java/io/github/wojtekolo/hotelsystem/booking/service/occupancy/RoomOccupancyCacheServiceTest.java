@@ -1,7 +1,6 @@
 package io.github.wojtekolo.hotelsystem.booking.service.occupancy;
 
 import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
-import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.booking.persistence.RoomStayRepository;
 import io.github.wojtekolo.hotelsystem.room.persistence.RoomRepository;
@@ -52,7 +51,7 @@ class RoomOccupancyCacheServiceTest {
                 ));
 
 //        when
-        RoomOccupancyResponse response = cacheService.getAllRoomOccupancy(1L,
+        RoomOccupancyData response = cacheService.getAllRoomOccupancy(1L,
                         today,
                         today.plusDays(20)
         );

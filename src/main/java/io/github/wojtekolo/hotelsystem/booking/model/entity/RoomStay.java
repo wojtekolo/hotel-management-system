@@ -71,7 +71,7 @@ public class RoomStay {
     private List<Guest> guests;
 
     @ManyToOne
-    @JoinColumn(name = "create_employee_id", nullable = false)
+    @JoinColumn(name = "create_employee_id", nullable = true)
     private Employee createBy;
 
     @ManyToOne
@@ -93,20 +93,19 @@ public class RoomStay {
         this.lastUpdateTime = LocalDateTime.now();
     }
 
-    public static RoomStay createPlanned(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight) {
-        return create(booking, room, discount, employee, from, to, customPricePerNight, RoomStayStatus.PLANNED);
+    public static RoomStay createPlanned(Booking booking, Room room, BigDecimal discount, LocalDate from, LocalDate to) {
+        return create(booking, room, discount, from, to, RoomStayStatus.PLANNED);
     }
 
-    private static RoomStay create(Booking booking, Room room, BigDecimal discount, Employee employee, LocalDate from, LocalDate to, BigDecimal customPricePerNight, RoomStayStatus status) {
+    private static RoomStay create(Booking booking, Room room, BigDecimal discount, LocalDate from, LocalDate to, RoomStayStatus status) {
         return RoomStay.builder()
                 .booking(booking)
                 .room(room)
                 .pricePerNight(calculatePricePerNight(room.getType()
-                        .getPricePerNight(), discount, customPricePerNight))
+                        .getPricePerNight(), discount))
                 .activeFrom(from)
                 .activeTo(to)
                 .status(status)
-                .createBy(employee)
                 .build();
     }
 
@@ -207,7 +206,7 @@ public class RoomStay {
         return Optional.of(RoomStayViolationReason.ROOM_EDIT_INVALID_STATUS);
     }
 
-    static BigDecimal calculatePricePerNight(BigDecimal roomPricePerNight, BigDecimal discount, BigDecimal customPricePerNight) {
+    static BigDecimal calculatePricePerNight(BigDecimal roomPricePerNight, BigDecimal discount) {
         if (discount == null) {
             throw new IllegalArgumentException("Discount cannot be null");
         }
@@ -216,13 +215,8 @@ public class RoomStay {
         if (discount.compareTo(BigDecimal.valueOf(1)) > 0)
             throw new IllegalArgumentException("Discount must be less than or equal to 1");
 
-
-        if (customPricePerNight == null) {
-            return roomPricePerNight
-                    .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
-        } else {
-            return customPricePerNight.setScale(2, RoundingMode.HALF_UP);
-        }
+        return roomPricePerNight
+                .multiply(BigDecimal.ONE.subtract(discount)).setScale(2, RoundingMode.HALF_UP);
     }
 
     public static List<RoomStayViolationReason> validateNewStayDates(LocalDate from, LocalDate to) {
@@ -235,15 +229,6 @@ public class RoomStay {
         }
         if (to.isBefore(LocalDate.now())) {
             violationReasons.add(RoomStayViolationReason.END_DATE_IN_THE_PAST);
-        }
-        return violationReasons;
-    }
-
-    public static List<RoomStayViolationReason> validateNewPrice(BigDecimal price) {
-        List<RoomStayViolationReason> violationReasons = new ArrayList<>();
-        if (price == null) return violationReasons;
-        if (price.compareTo(BigDecimal.ZERO) < 0) {
-            violationReasons.add(RoomStayViolationReason.PRICE_NEGATIVE);
         }
         return violationReasons;
     }
