@@ -33,10 +33,10 @@ public class BookingService {
     @Transactional
     public BookingDetails addBooking(BookingCreateRequest request) {
         BookingResources resources = bookingResourceLoader.loadForCreate(request);
-        Booking booking = Booking.createDefault(resources.customer(), resources.employee());
+        Booking booking = Booking.createDefault(resources.customer());
 
         List<RoomStayViolationDetails> updateErrors = bookingStayProcessor.createBooking(
-                booking, request.stays(), resources.employee(), resources.roomLoad().rooms());
+                booking, request.stays(), resources.roomLoad().rooms());
 
         BookingValidationResult validationResult = bookingValidator.validateBooking(booking);
 
@@ -55,7 +55,7 @@ public class BookingService {
         BookingResources resources = bookingResourceLoader.loadForUpdate(bookingId, request);
 
         BookingProcessingResult result = bookingStayProcessor.updateBooking(
-                resources.booking(), request.stays(), resources.employee(), resources.roomLoad().rooms());
+                resources.booking(), request.stays(), resources.roomLoad().rooms());
 
         BookingValidationResult validationResult = bookingValidator.validateBooking(resources.booking());
 

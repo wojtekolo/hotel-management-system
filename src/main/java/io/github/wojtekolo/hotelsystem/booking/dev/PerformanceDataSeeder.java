@@ -4,7 +4,6 @@ import io.github.wojtekolo.hotelsystem.booking.model.entity.Booking;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStay;
 import io.github.wojtekolo.hotelsystem.booking.model.entity.RoomStayStatus;
 import io.github.wojtekolo.hotelsystem.customer.model.Customer;
-import io.github.wojtekolo.hotelsystem.employee.model.Employee;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
 import io.github.wojtekolo.hotelsystem.room.model.RoomType;
 import jakarta.persistence.EntityManager;
@@ -45,7 +44,6 @@ public class PerformanceDataSeeder implements CommandLineRunner {
         List<Room> rooms = entityManager.createQuery("SELECT r FROM Room r", Room.class).getResultList();
 
         Customer customer = getCustomer();
-        Employee employee = getEmployee();
 
         int batchSize = 1000;
         int total = 0;
@@ -56,12 +54,11 @@ public class PerformanceDataSeeder implements CommandLineRunner {
                 LocalDate start = LocalDate.now().minusDays(ThreadLocalRandom.current().nextInt(1, 365));
                 LocalDate end = start.plusDays(2);
 
-                Booking booking = Booking.createDefault(customer, employee);
+                Booking booking = Booking.createDefault(customer);
 
                 RoomStay stay = RoomStay.builder()
                         .booking(booking)
                         .room(room)
-                        .createBy(employee)
                         .activeFrom(start)
                         .activeTo(end)
                         .status(RoomStayStatus.CANCELLED)
@@ -79,7 +76,6 @@ public class PerformanceDataSeeder implements CommandLineRunner {
                     entityManager.flush();
                     entityManager.clear();
                     customer = entityManager.merge(customer);
-                    employee = entityManager.merge(employee);
                 }
             }
         }
@@ -90,7 +86,6 @@ public class PerformanceDataSeeder implements CommandLineRunner {
         List<Room> rooms = entityManager.createQuery("SELECT r FROM Room r", Room.class).getResultList();
 
         Customer customer = getCustomer();
-        Employee employee = getEmployee();
 
         int batchSize = 1000;
         int totalSaved = 0;
@@ -104,15 +99,13 @@ public class PerformanceDataSeeder implements CommandLineRunner {
 
                 currentPointer = end;
 
-                Booking booking = Booking.createDefault(customer, employee);
+                Booking booking = Booking.createDefault(customer);
                 RoomStay stay = RoomStay.createPlanned(
                         booking,
                         room,
                         BigDecimal.ZERO,
-                        employee,
                         start,
-                        end,
-                        BigDecimal.valueOf(250.00)
+                        end
                 );
 
                 booking.addStay(stay);
@@ -124,7 +117,6 @@ public class PerformanceDataSeeder implements CommandLineRunner {
                     entityManager.flush();
                     entityManager.clear();
                     customer = entityManager.merge(customer);
-                    employee = entityManager.merge(employee);
                 }
             }
 
@@ -154,11 +146,4 @@ public class PerformanceDataSeeder implements CommandLineRunner {
                 .orElseThrow(() -> new IllegalStateException("Customers don't exist"));
     }
 
-    private Employee getEmployee() {
-        return entityManager.createQuery("SELECT e FROM Employee e", Employee.class)
-                .setMaxResults(1)
-                .getResultStream()
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Employees don't exist"));
-    }
 }

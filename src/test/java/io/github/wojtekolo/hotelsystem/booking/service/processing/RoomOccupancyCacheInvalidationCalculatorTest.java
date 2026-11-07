@@ -65,8 +65,7 @@ class RoomOccupancyCacheInvalidationCalculatorTest {
                 10L,
                 1L,
                 today.plusDays(1),
-                today.plusDays(10),
-                null
+                today.plusDays(10)
         );
 //        when
         Set<Long> result = calculator.calculateAffectedRoomIds(booking, List.of(request));
@@ -98,8 +97,7 @@ class RoomOccupancyCacheInvalidationCalculatorTest {
                 10L,
                 1L,
                 today,
-                today.plusDays(11),
-                null
+                today.plusDays(11)
         );
 //        when
         Set<Long> result = calculator.calculateAffectedRoomIds(booking, List.of(request));
@@ -131,8 +129,7 @@ class RoomOccupancyCacheInvalidationCalculatorTest {
                 10L,
                 2L,
                 today,
-                today.plusDays(11),
-                null
+                today.plusDays(11)
         );
 //        when
         Set<Long> result = calculator.calculateAffectedRoomIds(booking, List.of(request));
@@ -164,16 +161,14 @@ class RoomOccupancyCacheInvalidationCalculatorTest {
                 10L,
                 1L,
                 today,
-                today.plusDays(10),
-                null
+                today.plusDays(10)
         );
 
         var request2 = new RoomStayUpdateRequest(
                 null,
                 2L,
                 today,
-                today.plusDays(10),
-                null
+                today.plusDays(10)
         );
 //        when
         Set<Long> result = calculator.calculateAffectedRoomIds(booking, List.of(request1, request2));
@@ -205,8 +200,7 @@ class RoomOccupancyCacheInvalidationCalculatorTest {
                 10L,
                 1L,
                 today,
-                today.plusDays(10),
-                null
+                today.plusDays(10)
         );
 //        when
         Set<Long> result = calculator.calculateAffectedRoomIds(booking, List.of(request));

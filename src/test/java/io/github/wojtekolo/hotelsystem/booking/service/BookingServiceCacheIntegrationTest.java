@@ -69,7 +69,7 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
 //        load cache
         loadCache(room.getId());
 
-        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
+        var bookingCreateRequest = new BookingCreateRequest(customer.getId(), List.of(
                 createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))
         ));
 
@@ -100,7 +100,6 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         loadCache(room2.getId());
 
         BookingUpdateRequest updateRequest = createBookingUpdateRequest(
-                employee.getId(),
                 List.of(
                         createRoomStayUpdateRequest(null,
                                 room1.getId(), today.plusDays(20), today.plusDays(25))
@@ -133,7 +132,6 @@ public class BookingServiceCacheIntegrationTest  extends AbstractIntegrationTest
         loadCache(room.getId());
 
         BookingUpdateRequest updateRequest = createBookingUpdateRequest(
-                employee.getId(),
                 List.of(
                         createRoomStayUpdateRequest(bookingToUpdate.getStays().getFirst().getId(),
                                 room.getId(), today.plusDays(20), today.plusDays(25))

@@ -76,9 +76,7 @@ public class BookingServiceConcurrencyIntegrationTest extends AbstractIntegratio
         int requestCount = 10;
         Room room = data.prepareRoom();
         Customer customer = data.prepareCustomer();
-        Employee employee = data.prepareEmployee();
-
-        List<BookingCreateRequest> requests = data.prepareCollidingCreateRequests(requestCount, room, customer, employee);
+        List<BookingCreateRequest> requests = data.prepareCollidingCreateRequests(requestCount, room, customer);
 
 
         CountDownLatch startLatch = new CountDownLatch(1);

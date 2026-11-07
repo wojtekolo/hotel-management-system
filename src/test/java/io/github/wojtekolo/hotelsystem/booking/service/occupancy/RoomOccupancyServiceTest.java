@@ -1,6 +1,7 @@
 package io.github.wojtekolo.hotelsystem.booking.service.occupancy;
 
 import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRange;
+import io.github.wojtekolo.hotelsystem.booking.api.response.OccupiedRangeResponse;
 import io.github.wojtekolo.hotelsystem.booking.api.response.RoomOccupancyResponse;
 import io.github.wojtekolo.hotelsystem.booking.config.BookingProperties;
 import io.github.wojtekolo.hotelsystem.booking.exception.InvalidBookingDateException;
@@ -51,7 +52,7 @@ class RoomOccupancyServiceTest {
         var occupiedAfter = new OccupiedRange(today.plusDays(30), today.plusDays(35), 4L);
         var excludedBooking = new OccupiedRange(today.plusDays(13), today.plusDays(14), 5L);
 
-        var cacheResponse = new RoomOccupancyResponse(1L, today, maxDate, List.of(
+        var cacheResponse = new RoomOccupancyData(1L, today, maxDate, List.of(
                 occupiedBefore,
                 occupiedPartially,
                 occupiedDuring,
@@ -69,7 +70,7 @@ class RoomOccupancyServiceTest {
 //        then
         assertThat(result.occupiedRanges()).isNotNull();
         assertThat(result.occupiedRanges()).hasSize(2);
-        assertThat(result.occupiedRanges()).extracting(OccupiedRange::from, OccupiedRange::to)
+        assertThat(result.occupiedRanges()).extracting(OccupiedRangeResponse::from, OccupiedRangeResponse::to)
                 .containsExactlyInAnyOrder(
                         tuple(occupiedPartially.from(), occupiedPartially.to()),
                         tuple(occupiedDuring.from(), occupiedDuring.to())

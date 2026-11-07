@@ -85,18 +85,18 @@ public class TestDataFactory {
 
             entityManager.persist(booking);
 
-            requests.put(booking.getId(), new BookingUpdateRequest(employee.getId(), List.of(
-                    new RoomStayUpdateRequest(stay.getId(), targetRoom.getId(), stay.getActiveFrom(), stay.getActiveTo(), null)
+            requests.put(booking.getId(), new BookingUpdateRequest(List.of(
+                    new RoomStayUpdateRequest(stay.getId(), targetRoom.getId(), stay.getActiveFrom(), stay.getActiveTo())
             )));
 
         });
         return requests;
     }
 
-    public List<BookingCreateRequest> prepareCollidingCreateRequests(int count, Room room, Customer customer, Employee employee) {
+    public List<BookingCreateRequest> prepareCollidingCreateRequests(int count, Room room, Customer customer) {
         return IntStream.range(0, count)
                 .mapToObj(
-                        i -> new BookingCreateRequest(customer.getId(), employee.getId(), List.of(
+                        i -> new BookingCreateRequest(customer.getId(), List.of(
                                 createRoomStayCreateRequest(room.getId(), today.plusDays(5), today.plusDays(10))))
                 )
                 .toList();

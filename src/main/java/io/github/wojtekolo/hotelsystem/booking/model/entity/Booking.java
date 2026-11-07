@@ -38,7 +38,7 @@ public class Booking {
     private LocalDateTime createTime;
 
     @ManyToOne
-    @JoinColumn(name = "create_employee_id", nullable = false)
+    @JoinColumn(name = "create_employee_id", nullable = true)
     private Employee createBy;
 
     @Enumerated(EnumType.STRING)
@@ -70,10 +70,9 @@ public class Booking {
         return total;
     }
 
-    public static Booking createDefault(Customer customer, Employee employee) {
+    public static Booking createDefault(Customer customer) {
         return Booking.builder()
                       .customer(customer)
-                      .createBy(employee)
                       .paymentStatus(PaymentStatus.UNPAID)
                       .status(BookingStatus.PLANNED)
                       .stays(new ArrayList<>())
@@ -104,8 +103,7 @@ public class Booking {
             RoomStay roomStay = currentStaysMap.get(command.stayId());
             if (roomStay == null) continue;
 
-            allViolations.addAll(validateStayInvariants(roomStay.getId(), roomStay.getStatus(), command.roomId(), command.from(), command.to(), command.customPricePerNight()));
-            allViolations.add(updatePricePerNight(roomStay, command.customPricePerNight()));
+            allViolations.addAll(validateStayInvariants(roomStay.getId(), roomStay.getStatus(), command.roomId(), command.from(), command.to()));
 
             Room room = rooms.get(command.roomId());
             if (room != null) {
@@ -124,15 +122,15 @@ public class Booking {
         return allViolations.stream().filter(Objects::nonNull).toList();
     }
 
-    public List<RoomStayViolation> addNewStays(List<RoomStayCreateCommand> commands, Employee employee, Map<Long, Room> rooms) {
+    public List<RoomStayViolation> addNewStays(List<RoomStayCreateCommand> commands, Map<Long, Room> rooms) {
         List<RoomStayViolation> allViolations = new ArrayList<>();
 
         for (RoomStayCreateCommand command : commands) {
-            allViolations.addAll(validateStayInvariants(null, null, command.roomId(), command.from(), command.to(), command.customPricePerNight()));
+            allViolations.addAll(validateStayInvariants(null, null, command.roomId(), command.from(), command.to()));
 
             Room room = rooms.get(command.roomId());
             if (room != null) {
-                createAndAddPlannedStay(employee, room, command.from(), command.to(), command.customPricePerNight());
+                createAndAddPlannedStay(room, command.from(), command.to());
             }
         }
         return allViolations;
@@ -160,22 +158,13 @@ public class Booking {
                 .toList();
     }
 
-    private RoomStayViolation updatePricePerNight(RoomStay roomStay, BigDecimal pricePerNight) {
-        Optional<RoomStayViolationReason> reason = roomStay.tryUpdatePrice(pricePerNight);
-        return reason.map(stayUpdateViolationReason ->
-                             new RoomStayViolation(roomStay.getId(), roomStay.getStatus(), stayUpdateViolationReason, null))
-                     .orElse(null);
-    }
-
-    private void createAndAddPlannedStay(Employee employee, Room room, LocalDate from, LocalDate to, BigDecimal price) {
+    private void createAndAddPlannedStay(Room room, LocalDate from, LocalDate to) {
         addStay(RoomStay.createPlanned(
                 this,
                 room,
                 getSafeDiscount(),
-                employee,
                 from,
-                to,
-                price
+                to
         ));
     }
 
@@ -186,7 +175,7 @@ public class Booking {
                        .orElse(BigDecimal.ZERO);
     }
 
-    private Map<String, Object> getContext(RoomStayViolationReason reason, Long roomId, LocalDate from, LocalDate to, BigDecimal price) {
+    private Map<String, Object> getContext(RoomStayViolationReason reason, Long roomId, LocalDate from, LocalDate to) {
         Map<String, Object> context = new HashMap<>();
         context.put("roomId", roomId);
 
@@ -197,18 +186,15 @@ public class Booking {
             }
             case START_DATE_IN_THE_PAST -> context.put("from", from);
             case END_DATE_IN_THE_PAST -> context.put("to", to);
-            case PRICE_NEGATIVE -> context.put("pricePerNight", price);
         }
         return context;
     }
 
-    private List<RoomStayViolation> validateStayInvariants(Long stayId, RoomStayStatus status, Long roomId, LocalDate from, LocalDate to, BigDecimal price) {
-        List<RoomStayViolationReason> reasons = new ArrayList<>();
-        reasons.addAll(RoomStay.validateNewStayDates(from, to));
-        reasons.addAll(RoomStay.validateNewPrice(price));
+    private List<RoomStayViolation> validateStayInvariants(Long stayId, RoomStayStatus status, Long roomId, LocalDate from, LocalDate to) {
+        List<RoomStayViolationReason> reasons = new ArrayList<>(RoomStay.validateNewStayDates(from, to));
 
         return reasons.stream()
-                      .map(reason -> new RoomStayViolation(stayId, status, reason, getContext(reason, roomId, from, to, price)))
+                      .map(reason -> new RoomStayViolation(stayId, status, reason, getContext(reason, roomId, from, to)))
                       .collect(Collectors.toList());
     }
 }
