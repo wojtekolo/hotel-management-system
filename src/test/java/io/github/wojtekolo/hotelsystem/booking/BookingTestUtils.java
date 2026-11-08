@@ -29,7 +29,6 @@ public class BookingTestUtils {
                 .customer(customer)
                 .createBy(createEmployee)
                 .status(BookingStatus.PLANNED)
-                .paymentStatus(PaymentStatus.UNPAID)
                 .stays(new ArrayList<>());
     }
 
@@ -38,7 +37,6 @@ public class BookingTestUtils {
                 .customer(CustomerTestUtils.aValidCustomer().build())
                 .createBy(EmployeeTestUtils.aValidEmployee().build())
                 .status(BookingStatus.PLANNED)
-                .paymentStatus(PaymentStatus.UNPAID)
                 .stays(new ArrayList<>());
     }
 
@@ -51,7 +49,6 @@ public class BookingTestUtils {
                 LocalDateTime.now().minusDays(5),
                 BigDecimal.TEN,
                 "createBy",
-                PaymentStatus.UNPAID,
                 BookingStatus.PLANNED,
                 List.of(
                         new RoomStayDetails(

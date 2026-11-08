@@ -78,7 +78,6 @@ class BookingServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(savedBooking.getStays()).hasSize(1);
         assertThat(savedBooking.getCustomer().getId()).isEqualTo(customer.getId());
         assertThat(savedBooking.getStays().getFirst().getRoom().getId()).isEqualTo(room.getId());
-        assertThat(savedBooking.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
         assertThat(savedBooking.getStatus()).isEqualTo(BookingStatus.PLANNED);
         assertThat(savedBooking.getCreateBy()).isNull();
         assertThat(savedBooking.getStays().getFirst().getCreateBy()).isNull();

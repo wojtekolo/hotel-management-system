@@ -43,10 +43,6 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus paymentStatus;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private BookingStatus status;
 
     @PrePersist
@@ -73,7 +69,6 @@ public class Booking {
     public static Booking createDefault(Customer customer) {
         return Booking.builder()
                       .customer(customer)
-                      .paymentStatus(PaymentStatus.UNPAID)
                       .status(BookingStatus.PLANNED)
                       .stays(new ArrayList<>())
                       .build();
