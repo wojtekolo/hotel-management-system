@@ -2,7 +2,6 @@ package io.github.wojtekolo.hotelsystem.booking.model.entity;
 
 import io.github.wojtekolo.hotelsystem.booking.model.violations.RoomStayViolationReason;
 import io.github.wojtekolo.hotelsystem.employee.model.Employee;
-import io.github.wojtekolo.hotelsystem.guest.Guest;
 import io.github.wojtekolo.hotelsystem.room.model.Room;
 import jakarta.persistence.*;
 import lombok.*;
@@ -61,14 +60,6 @@ public class RoomStay {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomStayStatus status;
-
-    @ManyToMany
-    @JoinTable(
-            name = "stay_guest",
-            joinColumns = @JoinColumn(name = "stay_id"),
-            inverseJoinColumns = @JoinColumn(name = "guest_id")
-    )
-    private List<Guest> guests;
 
     @ManyToOne
     @JoinColumn(name = "create_employee_id", nullable = true)
